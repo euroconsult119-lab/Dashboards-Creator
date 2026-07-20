@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المنصة الذكية - تخصيص مواقع الإسكان</title>
+    
+    <!-- خطوط جوجل -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            gold: '#c79a55',
+                            goldHover: '#b58a48',
+                            goldLight: '#fbf9f4',
+                            green: '#196d5a',
+                            greenDark: '#125243',
+                            bg: '#f8fafc',
+                            card: '#ffffff'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Tajawal', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'hover': '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- مكتبات قراءة الإكسيل والرسوم البيانية -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { 
+            background-color: #f8fafc; 
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c79a55; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #196d5a; }
+        
+        /* تأثيرات البطاقات */
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.08);
+            border-color: #c79a55;
+        }
+
+        .header-gradient {
+            background: linear-gradient(to left, #ffffff, #fcf8f2);
+        }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen flex flex-col font-sans">
+
+    <!-- رسائل التنبيه -->
+    <div id="toastContainer" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-3 w-full max-w-md px-4"></div>
+
+    <header class="header-gradient shadow-sm relative z-20 border-b-[3px] border-brand-gold">
+        <div class="container mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+            <!-- Logos -->
+            <div class="flex items-center gap-6 bg-white px-6 py-2 rounded-2xl shadow-sm border border-gray-100">
+                <img src="https://iili.io/CwET9t9.png" alt="شعار الشركة" class="h-12 md:h-14 object-contain">
+                <div class="w-[2px] h-10 bg-gray-200 rounded-full"></div>
+                <img src="https://haj.gov.sa/_next/image?url=https%3A%2F%2Fhaj.gov.sa%2Fs-core%2F-%2Fmedia%2FProject%2FHAJJ%2FHajj-Logos%2FHeader-Logo.svg%3Fiar%3D0%26hash%3DEA30CCD6D55090BA41D3BA548A24E24A&w=256&q=75" 
+                     alt="وزارة الحج والعمرة" 
+                     class="h-12 md:h-14 object-contain">
+            </div>
+
+            <!-- Controls -->
+            <div>
+                <button onclick="resetApp()" class="flex items-center gap-2 bg-brand-gold hover:bg-brand-goldHover text-white px-6 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    رفع شيت إكسيل جديد
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 md:px-8 py-8 flex-grow relative z-10">
+        
+        <!-- قسم الرفع -->
+        <div id="uploadSection" class="glass-card rounded-3xl p-12 mb-8 text-center max-w-2xl mx-auto mt-10">
+            <div class="w-20 h-20 bg-brand-goldLight rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+            <h2 class="text-3xl font-black text-brand-green mb-3">النظام الآلي لتحليل بيانات المخيمات</h2>
+            <p class="text-gray-500 mb-8 font-medium text-lg">قم برفع شيت الإكسيل الخاص بتخصيص المواقع لعرض الداش بورد التفاعلية فوراً.</p>
+            
+            <button onclick="document.getElementById('fileInput').click()" id="uploadBtn" class="inline-flex items-center justify-center px-10 py-4 text-xl font-bold rounded-2xl text-white bg-brand-green hover:bg-brand-greenDark transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 gap-3">
+                <span>تصفح واختيار الملف</span>
+            </button>
+            <input type="file" id="fileInput" accept=".xlsx" class="hidden" onchange="handleFileUpload(event)">
+        </div>
+
+        <!-- الداش بورد -->
+        <div id="dashboardSection" class="hidden max-w-[1300px] mx-auto">
+            
+            <!-- الهيدر الخاص بالداش بورد -->
+            <div class="bg-white rounded-3xl shadow-soft p-8 mb-8 text-center relative border border-gray-100 z-40">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-gold to-brand-green rounded-t-3xl"></div>
+                
+                <!-- العناوين الديناميكية -->
+                <h2 id="mainTitle" class="text-2xl md:text-4xl font-black text-brand-gold mb-4 pt-2">تخصيص مواقع إسكان الحجاج بمشعر عرفات لموسم حج 1447 هـ</h2>
+                <div id="subBadge" class="inline-block bg-brand-gold text-white py-2 px-8 rounded-full text-lg font-bold shadow-sm">
+                    حجاج بمشعر عرفات
+                </div>
+
+                <!-- مربع البحث الذكي مع Z-index عالي لتجنب الاختفاء -->
+                <div class="flex flex-col md:flex-row items-center justify-center gap-4 mt-8 relative" id="campDropdownContainer">
+                    <span class="text-2xl font-black text-brand-green">البيانات المساحية للمخيم :</span>
+                    <div class="relative w-full md:w-96 z-50">
+                        <input type="text" id="campSearchInput" class="w-full border-b-4 border-brand-green bg-gray-50 rounded-t-xl p-4 text-2xl font-black text-center text-brand-green cursor-pointer focus:outline-none focus:bg-white transition-all shadow-inner" placeholder="اختر المخيم..." readonly onclick="toggleDropdown()">
+                        <div class="absolute left-5 top-1/2 transform -translate-y-1/2 text-brand-green pointer-events-none">
+                            <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"></path></svg>
+                        </div>
+                        
+                        <!-- قائمة المخيمات -->
+                        <div id="dropdownList" class="hidden absolute top-full left-0 right-0 bg-white border-2 border-brand-gold rounded-b-xl shadow-2xl max-h-80 overflow-y-auto">
+                            <div class="p-3 sticky top-0 bg-white border-b border-gray-100 shadow-sm z-10">
+                                <input type="text" id="innerSearch" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-lg focus:outline-none focus:border-brand-gold focus:bg-white transition-colors" placeholder="ابحث عن مخيم..." onkeyup="filterCamps()">
+                            </div>
+                            <ul id="campOptions" class="text-right text-lg font-bold">
+                                <!-- سيتم التعبئة بواسطة الجافاسكريبت -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الصف الأول (4 كروت إحصائية) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 relative z-10">
+                <!-- بطاقة 1: مساحة المخيم الكلية -->
+                <div class="glass-card rounded-2xl flex flex-col overflow-hidden">
+                    <div class="bg-brand-gold text-white py-4 text-center font-bold text-lg tracking-wide">مساحة المخيم الكلية</div>
+                    <div class="p-8 flex flex-col items-center justify-center flex-grow bg-brand-goldLight">
+                        <div class="flex items-baseline justify-center gap-2">
+                            <span class="text-5xl font-black text-brand-green drop-shadow-sm" id="val-totalArea">0</span>
+                            <span class="text-xl font-bold text-gray-500">م²</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- بطاقة 2: المساحة المخصصة للإسكان -->
+                <div class="glass-card rounded-2xl flex flex-col overflow-hidden">
+                    <div class="bg-brand-gold text-white py-4 text-center font-bold text-lg tracking-wide">المساحة المخصصة للإسكان</div>
+                    <div class="p-8 flex flex-col items-center justify-center flex-grow bg-brand-goldLight">
+                        <div class="flex items-baseline justify-center gap-2">
+                            <span class="text-5xl font-black text-brand-green drop-shadow-sm" id="val-housingArea">0</span>
+                            <span class="text-xl font-bold text-gray-500">م²</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- بطاقة 3: مساحة الخيام -->
+                <div class="glass-card rounded-2xl flex flex-col overflow-hidden">
+                    <div class="bg-brand-gold text-white py-4 text-center font-bold text-lg tracking-wide">مساحة الخيام وفق التصميم 5*5</div>
+                    <div class="p-8 flex flex-col items-center justify-center flex-grow bg-brand-goldLight">
+                        <div class="flex items-baseline justify-center gap-2">
+                            <span class="text-5xl font-black text-brand-green drop-shadow-sm" id="val-tentArea">0</span>
+                            <span class="text-xl font-bold text-gray-500">م²</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- بطاقة 4: عدد الحجاج -->
+                <div class="glass-card rounded-2xl flex flex-col overflow-hidden">
+                    <div class="bg-brand-gold text-white py-4 flex items-center justify-center gap-2 font-bold text-lg tracking-wide">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        عدد الحجاج
+                    </div>
+                    <div class="p-8 flex flex-col items-center justify-center flex-grow bg-brand-goldLight">
+                        <div class="flex items-baseline justify-center gap-2">
+                            <span class="text-5xl font-black text-brand-green drop-shadow-sm" id="val-pilgrims">0</span>
+                            <span class="text-xl font-bold text-gray-500">حاج</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الصف الثاني (كروت التفاصيل والشارت) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+                <!-- بطاقة 1: عدد الشركات -->
+                <div class="glass-card rounded-2xl flex flex-col overflow-hidden bg-brand-goldLight">
+                    <div class="p-8 flex flex-col items-center justify-center flex-grow text-center">
+                        <div class="text-brand-gold font-bold text-2xl mb-6">عدد الشركات</div>
+                        <div class="text-brand-green font-black text-6xl drop-shadow-sm" id="val-companiesCount">0</div>
+                    </div>
+                </div>
+
+                <!-- بطاقة 2: إجمالي المخصص -->
+                <div class="glass-card rounded-2xl flex flex-col overflow-hidden bg-brand-goldLight">
+                    <div class="p-8 flex flex-col items-center justify-center flex-grow text-center">
+                        <div class="text-brand-gold font-bold text-2xl mb-6">إجمالي عدد الحجاج<br>المخصص</div>
+                        <div class="flex items-baseline justify-center gap-2">
+                            <span class="text-6xl font-black text-brand-green drop-shadow-sm" id="val-allocated">0</span>
+                            <span class="text-2xl font-bold text-gray-500">حاج</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- بطاقة 3: اسم الشركة -->
+                <div class="glass-card rounded-2xl flex flex-col overflow-hidden bg-brand-goldLight">
+                    <div class="p-8 text-center flex flex-col justify-center items-center flex-grow gap-6">
+                        <h3 class="text-2xl font-black text-brand-green leading-snug" id="val-companyName">-</h3>
+                        <div class="border-2 border-brand-gold text-brand-gold px-6 py-2 rounded-xl font-black text-2xl bg-white">
+                            <span id="val-companyPilgrims">0</span> حاج
+                        </div>
+                    </div>
+                </div>
+
+                <!-- بطاقة 4: الشارت -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col items-center justify-center relative min-h-[350px]">
+                    <div class="w-full flex-grow relative flex items-center justify-center h-full">
+                        <canvas id="doughnutCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        Chart.defaults.font.family = 'Tajawal';
+        
+        let dashboardData = [];
+        let doughnutChartInstance = null;
+
+        // Custom Plugin لرسم نص الإجمالي في مركز الدائرة بدقة متناهية
+        const centerTextPlugin = {
+            id: 'centerText',
+            afterDraw: (chart) => {
+                if (chart.config.options.elements && chart.config.options.elements.center) {
+                    const ctx = chart.ctx;
+                    const centerConfig = chart.config.options.elements.center;
+                    const meta = chart.getDatasetMeta(0);
+                    
+                    if (meta.data && meta.data.length > 0) {
+                        // الحصول على نقطة المركز الفعلي للدائرة
+                        const centerX = meta.data[0].x;
+                        const centerY = meta.data[0].y;
+                        
+                        ctx.save();
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        // رسم كلمة الإجمالي
+                        ctx.font = 'bold 16px Tajawal';
+                        ctx.fillStyle = '#9ca3af'; // لون رمادي فاتح
+                        ctx.fillText('الإجمالي', centerX, centerY - 18);
+                        
+                        // رسم الرقم
+                        ctx.font = '900 34px Tajawal';
+                        ctx.fillStyle = '#125243'; // لون أخضر غامق
+                        ctx.fillText(centerConfig.text, centerX, centerY + 18);
+                        ctx.restore();
+                    }
+                }
+            }
+        };
+        Chart.register(centerTextPlugin);
+
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-red-500' : 'bg-green-500';
+            
+            toast.className = `flex items-center p-4 w-full text-white ${bgColor} rounded-xl shadow-2xl transition-all`;
+            toast.innerHTML = `
+                <div class="ml-3 text-sm font-bold flex-grow text-center">${message}</div>
+                <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentElement) toast.remove(); }, 5000);
+        }
+
+        function resetApp() {
+            document.getElementById('uploadSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+            dashboardData = [];
+        }
+
+        // إغلاق القائمة المنسدلة عند النقر خارجها
+        document.addEventListener('click', function(event) {
+            const container = document.getElementById('campDropdownContainer');
+            const dropdown = document.getElementById('dropdownList');
+            if (container && !container.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        function toggleDropdown() {
+            document.getElementById('dropdownList').classList.toggle('hidden');
+            document.getElementById('innerSearch').focus();
+        }
+
+        function filterCamps() {
+            const searchTerm = document.getElementById('innerSearch').value.toLowerCase();
+            const items = document.querySelectorAll('.camp-option');
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+            });
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const btn = document.getElementById('uploadBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> جاري معالجة البيانات...`;
+
+            // تغيير العنوان الديناميكي بناءً على اسم الملف
+            const fileName = file.name;
+            const mainTitleEl = document.getElementById('mainTitle');
+            const subBadgeEl = document.getElementById('subBadge');
+            
+            if (fileName.includes('الخارج')) {
+                mainTitleEl.textContent = 'تخصيص مواقع إسكان حجاج الخارج بمشعر عرفات لموسم حج 1447 هـ';
+                subBadgeEl.textContent = 'حجاج الخارج بمشعر عرفات';
+            } else if (fileName.includes('الداخل')) {
+                mainTitleEl.textContent = 'تخصيص مواقع إسكان حجاج الداخل بمشعر عرفات لموسم حج 1447 هـ';
+                subBadgeEl.textContent = 'حجاج الداخل بمشعر عرفات';
+            } else {
+                mainTitleEl.textContent = 'تخصيص مواقع إسكان الحجاج بمشعر عرفات لموسم حج 1447 هـ';
+                subBadgeEl.textContent = 'الحجاج بمشعر عرفات';
+            }
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(arrayBuffer);
+                parseData(workbook);
+            } catch (error) {
+                console.error(error);
+                showToast("حدث خطأ أثناء قراءة الملف. تأكد من سلامة ملف الإكسيل.");
+            } finally {
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+        function parseData(workbook) {
+            const worksheet = workbook.worksheets[0];
+            if(!worksheet || worksheet.rowCount < 2) {
+                showToast("ملف الإكسيل فارغ أو لا يحتوي على بيانات صحيحة.");
+                return;
+            }
+
+            const headerRow = worksheet.getRow(1).values;
+            let colMap = {};
+            
+            for(let i = 1; i < headerRow.length; i++) {
+                if(headerRow[i]) {
+                    let rawName = headerRow[i].toString();
+                    colMap[rawName.trim()] = i; 
+                    colMap[rawName.replace(/\s+/g, '')] = i; 
+                }
+            }
+
+            dashboardData = [];
+            worksheet.eachRow((row, rowNumber) => {
+                if(rowNumber === 1) return;
+                
+                const getValue = (keywords) => {
+                    for(let key in colMap) {
+                        for(let word of keywords) {
+                            if(key.includes(word.replace(/\s+/g, ''))) {
+                                let val = row.getCell(colMap[key]).value;
+                                if (val && typeof val === 'object' && val.result !== undefined) val = val.result;
+                                return val;
+                            }
+                        }
+                    }
+                    return 0;
+                };
+
+                let camp = row.getCell(colMap["اسم المخيم"] || colMap["اسمالمخيم"]).value;
+                if(!camp) return;
+
+                dashboardData.push({
+                    campName: camp.toString().trim(),
+                    totalArea: getValue(["مساحة المخيم الكلية"]),
+                    housingArea: getValue(["المساحة المخصصه للاسكان", "المساحة المخصصة للإسكان"]),
+                    tentArea: getValue(["مساحة الخيام وفق التصميم"]), 
+                    pilgrimsCount: getValue(["عدد الحجاج"]),
+                    companiesCount: getValue(["عدد الشركات"]),
+                    allocatedPilgrims: getValue(["عدد الحجاج المخصص"]),
+                    companyName: row.getCell(colMap["اسم الشركة"] || colMap["اسمالشركة"])?.value || "غير متوفر",
+                    surplus: getValue(["الفائض"])
+                });
+            });
+
+            if(dashboardData.length === 0) {
+                showToast("لم يتم العثور على البيانات المطلوبة. يرجى التأكد من عناوين الأعمدة.");
+                return;
+            }
+
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            
+            populateCampDropdown();
+            selectCamp(dashboardData[0].campName);
+        }
+
+        function populateCampDropdown() {
+            const list = document.getElementById('campOptions');
+            list.innerHTML = '';
+            
+            const uniqueCamps = [...new Set(dashboardData.map(item => item.campName))];
+            
+            uniqueCamps.forEach(camp => {
+                const li = document.createElement('li');
+                li.className = "camp-option px-5 py-4 hover:bg-brand-goldLight hover:text-brand-gold cursor-pointer transition-colors border-b border-gray-100 last:border-0 flex items-center gap-2";
+                li.innerHTML = `<svg class="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> <span>${camp}</span>`;
+                li.onclick = () => selectCamp(camp);
+                list.appendChild(li);
+            });
+        }
+
+        function selectCamp(campName) {
+            document.getElementById('campSearchInput').value = campName;
+            document.getElementById('dropdownList').classList.add('hidden');
+            
+            let targetData = dashboardData.find(d => d.campName === campName);
+
+            animateValue("val-totalArea", targetData.totalArea);
+            animateValue("val-housingArea", targetData.housingArea);
+            animateValue("val-tentArea", targetData.tentArea);
+            animateValue("val-pilgrims", targetData.pilgrimsCount);
+            
+            document.getElementById("val-companyName").textContent = targetData.companyName;
+            animateValue("val-companyPilgrims", targetData.allocatedPilgrims);
+            
+            animateValue("val-allocated", targetData.allocatedPilgrims);
+            animateValue("val-companiesCount", targetData.companiesCount);
+
+            updateChart(targetData.allocatedPilgrims, targetData.surplus, targetData.pilgrimsCount);
+        }
+
+        function formatNumber(num) {
+            return Number(num).toLocaleString('en-US', { maximumFractionDigits: 0 });
+        }
+
+        function animateValue(id, endValue) {
+            const obj = document.getElementById(id);
+            if(!obj) return;
+            const startValue = parseInt(obj.textContent.replace(/,/g, '')) || 0;
+            const duration = 800; 
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const easeOut = progress * (2 - progress);
+                const current = Math.floor(easeOut * (endValue - startValue) + startValue);
+                obj.textContent = formatNumber(current);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.textContent = formatNumber(endValue);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function updateChart(allocated, surplus, total) {
+            const ctx = document.getElementById('doughnutCanvas').getContext('2d');
+            
+            if(doughnutChartInstance) {
+                doughnutChartInstance.destroy();
+            }
+
+            let allocatedPct = total > 0 ? Math.round((allocated / total) * 100) : 0;
+            let surplusPct = total > 0 ? Math.round((surplus / total) * 100) : 0;
+
+            doughnutChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [`المخصص ${allocatedPct}%`, `الفائض ${surplusPct}%`],
+                    datasets: [{
+                        data: [allocated, surplus],
+                        backgroundColor: ['#c79a55', '#125243'], 
+                        borderWidth: 0,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%', 
+                    elements: {
+                        center: {
+                            text: formatNumber(total) // القيمة التي ستُطبع في المركز باستخدام الـ Plugin
+                        }
+                    },
+                    layout: {
+                        padding: { bottom: 20 }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom', 
+                            labels: {
+                                font: { family: 'Tajawal', size: 14, weight: 'bold' },
+                                color: '#125243',
+                                usePointStyle: true,
+                                padding: 25
+                            }
+                        },
+                        tooltip: {
+                            rtl: true,
+                            backgroundColor: 'rgba(25, 109, 90, 0.9)', 
+                            titleFont: { family: 'Tajawal', size: 14 },
+                            bodyFont: { family: 'Tajawal', size: 15, weight: 'bold' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
