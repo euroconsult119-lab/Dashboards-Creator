@@ -15,6 +15,7 @@
     
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -22,236 +23,320 @@
                             gold: '#c79a55',
                             goldHover: '#b58a48',
                             goldLight: '#fbf9f4',
+                            goldDark: '#1e1b15',
                             green: '#196d5a',
                             greenDark: '#125243',
                             bg: '#f8fafc',
-                            card: '#ffffff'
+                            bgDark: '#0f172a',
+                            cardDark: '#1e293b'
                         }
                     },
                     fontFamily: {
                         sans: ['Tajawal', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-                        'hover': '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
                     }
                 }
             }
         }
     </script>
 
-    <!-- مكتبات قراءة الإكسيل والرسوم البيانية -->
+    <!-- المكتبات الأساسية للبيانات والتصدير -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 
     <style>
         body { 
-            background-color: #f8fafc; 
-            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            transition: background-color 0.3s ease;
+            background-image: radial-gradient(rgba(200,200,200,0.2) 1px, transparent 1px);
             background-size: 20px 20px;
         }
         
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #c79a55; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #196d5a; }
         
-        /* تأثيرات البطاقات */
         .glass-card {
-            background: #ffffff;
             border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
         }
-        .glass-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.08);
-            border-color: #c79a55;
-        }
+        .dark .glass-card { border-color: rgba(51, 65, 85, 0.8); }
+        .glass-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.1); border-color: #c79a55; }
 
-        .header-gradient {
-            background: linear-gradient(to left, #ffffff, #fcf8f2);
+        .editable-input {
+            background: transparent;
+            border: 2px dashed transparent;
+            outline: none;
+            transition: all 0.3s;
+            width: 100px;
+        }
+        .editable-input:hover { border-color: #c79a55; background: rgba(255,255,255,0.8); cursor: text; }
+        .dark .editable-input:hover { background: rgba(0,0,0,0.4); }
+        .editable-input:focus { border-color: #196d5a; border-style: solid; background: #fff; color: #196d5a; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .exporting-mode {
+            width: 1300px !important;
+            max-width: 1300px !important;
+            background-color: #ffffff !important;
+            padding: 40px !important;
+            margin: 0 auto !important;
+            display: block !important;
+        }
+        .exporting-mode * { transition: none !important; animation: none !important; }
+        .exporting-mode .glass-card { background-color: #ffffff !important; border: 2px solid #e2e8f0 !important; box-shadow: none !important; transform: none !important; }
+        .exporting-mode .bg-brand-goldLight { background-color: #fbf9f4 !important; }
+        .exporting-mode .text-brand-green { color: #196d5a !important; }
+        .exporting-mode .text-gray-500 { color: #6b7280 !important; }
+        .exporting-mode #exportLogos { display: flex !important; }
+        .exporting-mode .no-export { display: none !important; }
+        
+        .exporting-mode .grid, .print-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 20px !important;
+        }
+        .exporting-mode .flex-col.md\:flex-row { flex-direction: row !important; }
+
+        @media print {
+            @page { size: A3 landscape; margin: 10mm; }
+            body { background: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .no-print { display: none !important; }
+            #printableDashboard { padding: 0 !important; margin: 0 !important; width: 100% !important; }
+            #exportLogos { display: flex !important; margin-bottom: 20mm !important; }
+            .print-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 15px !important; }
+            .glass-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
         }
     </style>
 </head>
-<body class="text-gray-800 min-h-screen flex flex-col font-sans">
+<body class="bg-brand-bg dark:bg-brand-bgDark text-gray-800 dark:text-gray-100 min-h-screen flex flex-col font-sans relative">
 
-    <!-- رسائل التنبيه -->
-    <div id="toastContainer" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-3 w-full max-w-md px-4"></div>
+    <div id="toastContainer" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-3 w-full max-w-md px-4 pointer-events-none"></div>
 
-    <header class="header-gradient shadow-sm relative z-20 border-b-[3px] border-brand-gold">
+    <header class="bg-white dark:bg-brand-cardDark shadow-sm relative z-20 border-b-[3px] border-brand-gold no-print transition-colors duration-300">
         <div class="container mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
-            <!-- Logos -->
-            <div class="flex items-center gap-6 bg-white px-6 py-2 rounded-2xl shadow-sm border border-gray-100">
-                <img src="https://iili.io/CwET9t9.png" alt="شعار الشركة" class="h-12 md:h-14 object-contain">
-                <div class="w-[2px] h-10 bg-gray-200 rounded-full"></div>
-                <img src="https://haj.gov.sa/_next/image?url=https%3A%2F%2Fhaj.gov.sa%2Fs-core%2F-%2Fmedia%2FProject%2FHAJJ%2FHajj-Logos%2FHeader-Logo.svg%3Fiar%3D0%26hash%3DEA30CCD6D55090BA41D3BA548A24E24A&w=256&q=75" 
-                     alt="وزارة الحج والعمرة" 
-                     class="h-12 md:h-14 object-contain">
+            <div class="flex items-center gap-6 bg-white dark:bg-slate-800 px-4 py-1 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                <img id="logoEC" class="h-12 object-contain filter dark:brightness-0 dark:invert" alt="شعار الشركة">
+                <div class="w-[2px] h-10 bg-gray-200 dark:bg-slate-600 rounded-full"></div>
+                <img id="logoMin" class="h-12 object-contain filter dark:brightness-0 dark:invert" alt="وزارة الحج والعمرة">
             </div>
-
-            <!-- Controls -->
-            <div>
-                <button onclick="resetApp()" class="flex items-center gap-2 bg-brand-gold hover:bg-brand-goldHover text-white px-6 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition-all duration-300">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    رفع شيت إكسيل جديد
+            <div class="flex items-center gap-3">
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-brand-gold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors shadow-sm">
+                    <svg id="moonIcon" class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="sunIcon" class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+                <button onclick="resetApp()" class="flex items-center gap-2 bg-brand-gold hover:bg-brand-goldHover text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all">
+                    رفع ملف جديد
                 </button>
             </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 md:px-8 py-8 flex-grow relative z-10">
+    <main class="container mx-auto px-4 md:px-8 py-6 flex-grow relative z-10">
         
-        <!-- قسم الرفع -->
-        <div id="uploadSection" class="glass-card rounded-3xl p-12 mb-8 text-center max-w-2xl mx-auto mt-10">
-            <div class="w-20 h-20 bg-brand-goldLight rounded-full flex items-center justify-center mx-auto mb-6">
+        <div id="uploadSection" class="glass-card bg-white dark:bg-brand-cardDark rounded-3xl p-12 text-center max-w-2xl mx-auto mt-10">
+            <div class="w-20 h-20 bg-brand-goldLight dark:bg-brand-goldDark rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-brand-gold">
                 <svg class="w-10 h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             </div>
-            <h2 class="text-3xl font-black text-brand-green mb-3">النظام الآلي لتحليل بيانات المخيمات</h2>
-            <p class="text-gray-500 mb-8 font-medium text-lg">قم برفع شيت الإكسيل الخاص بتخصيص المواقع لعرض الداش بورد التفاعلية فوراً.</p>
-            
-            <button onclick="document.getElementById('fileInput').click()" id="uploadBtn" class="inline-flex items-center justify-center px-10 py-4 text-xl font-bold rounded-2xl text-white bg-brand-green hover:bg-brand-greenDark transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 gap-3">
-                <span>تصفح واختيار الملف</span>
+            <h2 class="text-3xl font-black text-brand-green dark:text-brand-gold mb-3">النظام الآلي لتحليل البيانات</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-8 font-medium">قم برفع شيت الإكسيل (المتعدد الشيتات) لعرض الداش بورد والتعديل المباشر.</p>
+            <button onclick="handleFileSelection()" class="inline-flex items-center justify-center px-10 py-4 text-xl font-bold rounded-2xl text-white bg-brand-green hover:bg-brand-greenDark transition-all shadow-lg gap-3 mx-auto pointer-events-auto">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>استعراض وفتح الملف</span>
             </button>
-            <input type="file" id="fileInput" accept=".xlsx" class="hidden" onchange="handleFileUpload(event)">
+            <input type="file" id="fallbackFileInput" accept=".xlsx" class="hidden" onchange="handleFallbackUpload(event)">
         </div>
 
-        <!-- الداش بورد -->
         <div id="dashboardSection" class="hidden max-w-[1300px] mx-auto">
             
-            <!-- الهيدر الخاص بالداش بورد -->
-            <div class="bg-white rounded-3xl shadow-soft p-8 mb-8 text-center relative border border-gray-100 z-40">
-                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-gold to-brand-green rounded-t-3xl"></div>
+            <div id="sheetsNavbar" class="flex flex-wrap justify-center items-center gap-3 bg-white dark:bg-brand-cardDark shadow-md p-3 rounded-2xl mb-6 border border-gray-200 dark:border-slate-700 no-print transition-colors"></div>
+
+            <div id="exportToolbar" class="flex flex-wrap justify-between items-center bg-white dark:bg-brand-cardDark shadow-sm p-4 rounded-xl mb-6 border border-gray-200 dark:border-slate-700 no-print gap-4 transition-colors">
+                <div class="flex items-center gap-2">
+                    <button onclick="window.print()" class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-white hover:bg-gray-200 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> طباعة
+                    </button>
+                    <button onclick="exportPDF()" class="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors">
+                        تصدير PDF
+                    </button>
+                    <button onclick="exportPPTX()" class="bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-100 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors">
+                        تصدير PPTX
+                    </button>
+                </div>
+                <button id="saveChangesBtn" onclick="saveDataToFile()" class="hidden bg-brand-gold hover:bg-brand-goldHover text-white px-6 py-2 rounded-lg font-black flex items-center gap-2 transition-all shadow-md animate-pulse pointer-events-auto">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> حفظ التغيرات في الشيت
+                </button>
+            </div>
+
+            <div id="printableDashboard" class="bg-transparent rounded-3xl transition-all mx-auto pb-4">
                 
-                <!-- العناوين الديناميكية -->
-                <h2 id="mainTitle" class="text-2xl md:text-4xl font-black text-brand-gold mb-4 pt-2">تخصيص مواقع إسكان الحجاج بمشعر عرفات لموسم حج 1447 هـ</h2>
-                <div id="subBadge" class="inline-block bg-brand-gold text-white py-2 px-8 rounded-full text-lg font-bold shadow-sm">
-                    حجاج بمشعر عرفات
+                <div id="exportLogos" class="hidden w-full justify-between items-center mb-6 pb-4 border-b-2 border-brand-gold px-4">
+                    <img id="exportLogoEC" class="h-16 object-contain" alt="الشعار 1" crossorigin="anonymous">
+                    <h1 class="text-3xl font-black text-brand-gold">المنصة الذكية لتحليل وإدارة المواقع</h1>
+                    <img id="exportLogoMin" class="h-16 object-contain" alt="شعار وزارة الحج والعمرة" crossorigin="anonymous">
                 </div>
 
-                <!-- مربع البحث الذكي مع Z-index عالي لتجنب الاختفاء -->
-                <div class="flex flex-col md:flex-row items-center justify-center gap-4 mt-8 relative" id="campDropdownContainer">
-                    <span class="text-2xl font-black text-brand-green">البيانات المساحية للمخيم :</span>
-                    <div class="relative w-full md:w-96 z-50">
-                        <input type="text" id="campSearchInput" class="w-full border-b-4 border-brand-green bg-gray-50 rounded-t-xl p-4 text-2xl font-black text-center text-brand-green cursor-pointer focus:outline-none focus:bg-white transition-all shadow-inner" placeholder="اختر المخيم..." readonly onclick="toggleDropdown()">
-                        <div class="absolute left-5 top-1/2 transform -translate-y-1/2 text-brand-green pointer-events-none">
-                            <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"></path></svg>
+                <div class="text-center relative mb-8 z-40 pt-2">
+                    <h2 id="mainTitle" class="text-3xl md:text-4xl font-black text-brand-gold mb-3">تخصيص مواقع إسكان الحجاج بمشعر عرفات</h2>
+                    <div id="subBadge" class="inline-block bg-brand-green text-white py-2 px-8 rounded-full text-lg font-bold shadow-sm mb-6">
+                        حجاج بمشعر عرفات
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-4 relative" id="campDropdownContainer">
+                        <span id="labelSelectCamp" class="text-2xl font-black text-brand-green dark:text-brand-gold">البيانات المساحية للمخيم :</span>
+                        <div class="relative w-full md:w-96 z-50">
+                            <input type="text" id="campSearchInput" class="w-full border-b-4 border-brand-green dark:border-brand-gold bg-brand-goldLight dark:bg-slate-800 rounded-t-xl p-3 text-2xl font-black text-center text-brand-green dark:text-white cursor-pointer focus:outline-none transition-all shadow-sm pointer-events-auto" placeholder="اختر الموقع..." readonly onclick="toggleDropdown()">
+                            <div class="dropdown-arrow absolute left-5 top-1/2 transform -translate-y-1/2 text-brand-green dark:text-brand-gold pointer-events-none no-print no-export">
+                                <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"></path></svg>
+                            </div>
+                            <div id="dropdownList" class="hidden absolute top-full left-0 right-0 bg-white dark:bg-slate-800 border-2 border-brand-green dark:border-brand-gold rounded-b-xl shadow-2xl max-h-80 overflow-y-auto no-print no-export pointer-events-auto">
+                                <div class="p-3 sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700 shadow-sm z-10">
+                                    <input type="text" id="innerSearch" class="w-full bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 rounded-lg p-3 text-lg focus:outline-none focus:border-brand-green transition-colors pointer-events-auto" placeholder="ابحث..." onkeyup="filterCamps()">
+                                </div>
+                                <ul id="campOptions" class="text-right text-lg font-bold pointer-events-auto"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dataContainer">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print-grid gap-5 mb-6 relative z-10">
+                        <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
+                            <div class="bg-brand-gold text-white py-3 text-center font-bold text-lg">مساحة الموقع الكلية</div>
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
+                                <div class="flex items-baseline justify-center gap-2">
+                                    <span class="text-4xl font-black text-brand-green dark:text-white" id="val-totalArea">0</span>
+                                    <span class="text-lg font-bold text-gray-500 dark:text-gray-400">م²</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
+                            <div class="bg-brand-gold text-white py-3 text-center font-bold text-lg">المساحة المخصصة للإسكان</div>
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
+                                <div class="flex items-baseline justify-center gap-2">
+                                    <span class="text-4xl font-black text-brand-green dark:text-white" id="val-housingArea">0</span>
+                                    <span class="text-lg font-bold text-gray-500 dark:text-gray-400">م²</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
+                            <div class="bg-brand-gold text-white py-3 text-center font-bold text-lg">مساحة الخيام وفق التصميم 5*5</div>
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
+                                <div class="flex items-baseline justify-center gap-2">
+                                    <span class="text-4xl font-black text-brand-green dark:text-white" id="val-tentArea">0</span>
+                                    <span class="text-lg font-bold text-gray-500 dark:text-gray-400">م²</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
+                            <div class="bg-brand-gold text-white py-3 flex items-center justify-center gap-2 font-bold text-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> عدد الحجاج الاجمالي
+                            </div>
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
+                                <div class="flex items-baseline justify-center gap-2">
+                                    <span class="text-4xl font-black text-brand-green dark:text-white" id="val-pilgrims">0</span>
+                                    <span class="text-lg font-bold text-gray-500 dark:text-gray-400">حاج</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print-grid gap-5 relative z-10 mb-6">
+                        <div class="glass-card bg-brand-goldLight dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow text-center">
+                                <div id="cardCountTitle" class="text-brand-gold font-bold text-xl mb-4">عدد الشركات</div>
+                                <div class="text-brand-green dark:text-white font-black text-5xl" id="val-companiesCount">0</div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card bg-brand-goldLight dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden border-2 border-transparent focus-within:border-brand-green relative group">
+                            <div class="absolute top-2 left-2 text-gray-400 dark:text-gray-500 group-hover:text-brand-gold no-print no-export pointer-events-none" title="اضغط للتعديل">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </div>
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow text-center">
+                                <div class="text-brand-gold font-bold text-xl mb-4">إجمالي عدد الحجاج المخصص</div>
+                                <div class="flex flex-row items-center justify-center gap-2 w-full h-16 pointer-events-auto">
+                                    <input type="number" id="val-allocated-input" class="editable-input text-5xl font-black text-brand-green dark:text-white m-0 p-0 text-center" value="0" oninput="handleAllocatedChange()">
+                                    <span class="text-xl font-bold text-gray-500 dark:text-gray-400 pt-3">حاج</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="companyDisplaySlot" class="glass-card bg-brand-goldLight dark:bg-brand-cardDark rounded-2xl flex flex-col justify-center p-3 gap-2"></div>
+
+                        <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl p-4 flex flex-col items-center justify-center relative min-h-[250px]">
+                            <div class="w-full flex-grow relative flex items-center justify-center h-full">
+                                <canvas id="doughnutCanvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قسم الخريطة التفاعلية -->
+                    <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl p-6 relative z-10 shadow-sm mb-4">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4 border-b border-gray-100 dark:border-slate-700 pb-4">
+                            <h3 class="text-xl font-black text-brand-green dark:text-brand-gold flex items-center gap-2">
+                                <svg class="w-6 h-6 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                الموقع الجغرافي والحدود المساحية
+                            </h3>
+                            
+                            <div class="flex items-center gap-3 flex-wrap justify-center">
+                                <!-- زر فتح على جوجل ماب -->
+                                <a id="btnOpenGoogleMaps" target="_blank" href="#" class="hidden bg-brand-gold hover:bg-brand-goldHover text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center gap-2 transition-all no-print pointer-events-auto">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                    فتح على جوجل ماب
+                                </a>
+                                <!-- اسم المخيم -->
+                                <div id="coordsText" class="text-lg font-black bg-brand-goldLight dark:bg-slate-700 text-brand-green dark:text-brand-gold px-6 py-2.5 rounded-xl border border-brand-gold/30 shadow-sm">
+                                    --
+                                </div>
+                            </div>
                         </div>
                         
-                        <!-- قائمة المخيمات -->
-                        <div id="dropdownList" class="hidden absolute top-full left-0 right-0 bg-white border-2 border-brand-gold rounded-b-xl shadow-2xl max-h-80 overflow-y-auto">
-                            <div class="p-3 sticky top-0 bg-white border-b border-gray-100 shadow-sm z-10">
-                                <input type="text" id="innerSearch" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-lg focus:outline-none focus:border-brand-gold focus:bg-white transition-colors" placeholder="ابحث عن مخيم..." onkeyup="filterCamps()">
+                        <div class="w-full h-[400px] rounded-xl overflow-hidden border-2 border-brand-gold/40 relative bg-gray-100 dark:bg-slate-800 pointer-events-auto z-10">
+                            <!-- حاوية الخريطة -->
+                            <div id="mapContainer" class="w-full h-full z-10"></div>
+                            
+                            <!-- رسالة بديلة في حال عدم وجود إحداثيات أو لينك -->
+                            <div id="mapFallback" class="hidden absolute inset-0 z-20 flex items-center justify-center text-xl font-bold text-gray-500 bg-gray-50 dark:bg-slate-800 text-center px-4">
+                                عذراً.. لم يتم إرفاق إحداثيات أو خريطة مخصصة لهذا المخيم في ملف الإكسيل
                             </div>
-                            <ul id="campOptions" class="text-right text-lg font-bold">
-                                <!-- سيتم التعبئة بواسطة الجافاسكريبت -->
-                            </ul>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- الصف الأول (4 كروت إحصائية) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 relative z-10">
-                <!-- بطاقة 1: مساحة المخيم الكلية -->
-                <div class="glass-card rounded-2xl flex flex-col overflow-hidden">
-                    <div class="bg-brand-gold text-white py-4 text-center font-bold text-lg tracking-wide">مساحة المخيم الكلية</div>
-                    <div class="p-8 flex flex-col items-center justify-center flex-grow bg-brand-goldLight">
-                        <div class="flex items-baseline justify-center gap-2">
-                            <span class="text-5xl font-black text-brand-green drop-shadow-sm" id="val-totalArea">0</span>
-                            <span class="text-xl font-bold text-gray-500">م²</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- بطاقة 2: المساحة المخصصة للإسكان -->
-                <div class="glass-card rounded-2xl flex flex-col overflow-hidden">
-                    <div class="bg-brand-gold text-white py-4 text-center font-bold text-lg tracking-wide">المساحة المخصصة للإسكان</div>
-                    <div class="p-8 flex flex-col items-center justify-center flex-grow bg-brand-goldLight">
-                        <div class="flex items-baseline justify-center gap-2">
-                            <span class="text-5xl font-black text-brand-green drop-shadow-sm" id="val-housingArea">0</span>
-                            <span class="text-xl font-bold text-gray-500">م²</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- بطاقة 3: مساحة الخيام -->
-                <div class="glass-card rounded-2xl flex flex-col overflow-hidden">
-                    <div class="bg-brand-gold text-white py-4 text-center font-bold text-lg tracking-wide">مساحة الخيام وفق التصميم 5*5</div>
-                    <div class="p-8 flex flex-col items-center justify-center flex-grow bg-brand-goldLight">
-                        <div class="flex items-baseline justify-center gap-2">
-                            <span class="text-5xl font-black text-brand-green drop-shadow-sm" id="val-tentArea">0</span>
-                            <span class="text-xl font-bold text-gray-500">م²</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- بطاقة 4: عدد الحجاج -->
-                <div class="glass-card rounded-2xl flex flex-col overflow-hidden">
-                    <div class="bg-brand-gold text-white py-4 flex items-center justify-center gap-2 font-bold text-lg tracking-wide">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        عدد الحجاج
-                    </div>
-                    <div class="p-8 flex flex-col items-center justify-center flex-grow bg-brand-goldLight">
-                        <div class="flex items-baseline justify-center gap-2">
-                            <span class="text-5xl font-black text-brand-green drop-shadow-sm" id="val-pilgrims">0</span>
-                            <span class="text-xl font-bold text-gray-500">حاج</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- الصف الثاني (كروت التفاصيل والشارت) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-                <!-- بطاقة 1: عدد الشركات -->
-                <div class="glass-card rounded-2xl flex flex-col overflow-hidden bg-brand-goldLight">
-                    <div class="p-8 flex flex-col items-center justify-center flex-grow text-center">
-                        <div class="text-brand-gold font-bold text-2xl mb-6">عدد الشركات</div>
-                        <div class="text-brand-green font-black text-6xl drop-shadow-sm" id="val-companiesCount">0</div>
-                    </div>
-                </div>
-
-                <!-- بطاقة 2: إجمالي المخصص -->
-                <div class="glass-card rounded-2xl flex flex-col overflow-hidden bg-brand-goldLight">
-                    <div class="p-8 flex flex-col items-center justify-center flex-grow text-center">
-                        <div class="text-brand-gold font-bold text-2xl mb-6">إجمالي عدد الحجاج<br>المخصص</div>
-                        <div class="flex items-baseline justify-center gap-2">
-                            <span class="text-6xl font-black text-brand-green drop-shadow-sm" id="val-allocated">0</span>
-                            <span class="text-2xl font-bold text-gray-500">حاج</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- بطاقة 3: اسم الشركة -->
-                <div class="glass-card rounded-2xl flex flex-col overflow-hidden bg-brand-goldLight">
-                    <div class="p-8 text-center flex flex-col justify-center items-center flex-grow gap-6">
-                        <h3 class="text-2xl font-black text-brand-green leading-snug" id="val-companyName">-</h3>
-                        <div class="border-2 border-brand-gold text-brand-gold px-6 py-2 rounded-xl font-black text-2xl bg-white">
-                            <span id="val-companyPilgrims">0</span> حاج
-                        </div>
-                    </div>
-                </div>
-
-                <!-- بطاقة 4: الشارت -->
-                <div class="glass-card rounded-2xl p-6 flex flex-col items-center justify-center relative min-h-[350px]">
-                    <div class="w-full flex-grow relative flex items-center justify-center h-full">
-                        <canvas id="doughnutCanvas"></canvas>
-                    </div>
-                </div>
-            </div>
-
+                </div> <!-- /dataContainer -->
+            </div> <!-- /printableDashboard -->
         </div>
     </main>
 
     <script>
         Chart.defaults.font.family = 'Tajawal';
         
+        let globalWorkbook = null;
+        let sheetsData = {};
+        let currentSheetName = "";
         let dashboardData = [];
         let doughnutChartInstance = null;
+        let currentCampData = null;
+        let fileHandle = null;
 
-        // Custom Plugin لرسم نص الإجمالي في مركز الدائرة بدقة متناهية
+        const URL_LOGO_EC = "https://iili.io/CwET9t9.png";
+        const URL_LOGO_MIN = "https://upload.wikimedia.org/wikipedia/ar/thumb/a/ac/%D8%B4%D8%B9%D8%A7%D8%B1_%D9%88%D8%B2%D8%A7%D8%B1%D8%A9_%D8%A7%D9%84%D8%AD%D8%AC_%D9%88%D8%A7%D9%84%D8%B9%D9%85%D8%B1%D8%A9.svg/3840px-%D8%B4%D8%B9%D8%A7%D8%B1_%D9%88%D8%B2%D8%A7%D8%B1%D8%A9_%D8%A7%D9%84%D8%AD%D8%AC_%D9%88%D8%A7%D9%84%D8%B9%D9%85%D8%B1%D8%A9.svg.png";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('logoEC').src = URL_LOGO_EC;
+            document.getElementById('exportLogoEC').src = URL_LOGO_EC;
+            document.getElementById('logoMin').src = URL_LOGO_MIN;
+            document.getElementById('exportLogoMin').src = URL_LOGO_MIN;
+        });
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            if(doughnutChartInstance && currentCampData) {
+                updateChart();
+            }
+        }
+
         const centerTextPlugin = {
             id: 'centerText',
             afterDraw: (chart) => {
@@ -259,25 +344,20 @@
                     const ctx = chart.ctx;
                     const centerConfig = chart.config.options.elements.center;
                     const meta = chart.getDatasetMeta(0);
-                    
                     if (meta.data && meta.data.length > 0) {
-                        // الحصول على نقطة المركز الفعلي للدائرة
                         const centerX = meta.data[0].x;
                         const centerY = meta.data[0].y;
+                        const isDark = document.documentElement.classList.contains('dark') && !document.getElementById('printableDashboard').classList.contains('exporting-mode');
                         
                         ctx.save();
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        
-                        // رسم كلمة الإجمالي
-                        ctx.font = 'bold 16px Tajawal';
-                        ctx.fillStyle = '#9ca3af'; // لون رمادي فاتح
-                        ctx.fillText('الإجمالي', centerX, centerY - 18);
-                        
-                        // رسم الرقم
-                        ctx.font = '900 34px Tajawal';
-                        ctx.fillStyle = '#125243'; // لون أخضر غامق
-                        ctx.fillText(centerConfig.text, centerX, centerY + 18);
+                        ctx.font = 'bold 14px Tajawal';
+                        ctx.fillStyle = '#9ca3af';
+                        ctx.fillText('الإجمالي', centerX, centerY - 15);
+                        ctx.font = '900 28px Tajawal';
+                        ctx.fillStyle = isDark ? '#ffffff' : '#125243';
+                        ctx.fillText(centerConfig.text, centerX, centerY + 15);
                         ctx.restore();
                     }
                 }
@@ -285,268 +365,606 @@
         };
         Chart.register(centerTextPlugin);
 
-        function showToast(message, type = 'error') {
+        function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
+            if(type === 'success' || type === 'error') { container.innerHTML = ''; }
+            
             const toast = document.createElement('div');
-            const bgColor = type === 'error' ? 'bg-red-500' : 'bg-green-500';
-            
-            toast.className = `flex items-center p-4 w-full text-white ${bgColor} rounded-xl shadow-2xl transition-all`;
-            toast.innerHTML = `
-                <div class="ml-3 text-sm font-bold flex-grow text-center">${message}</div>
-                <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            `;
+            const bgColor = type === 'error' ? 'bg-red-500' : 'bg-brand-green';
+            toast.className = `flex items-center p-4 w-full text-white ${bgColor} rounded-xl shadow-2xl transition-all z-[999]`;
+            toast.innerHTML = `<div class="font-bold flex-grow text-center">${message}</div>`;
             container.appendChild(toast);
-            setTimeout(() => { if(toast.parentElement) toast.remove(); }, 5000);
-        }
-
-        function resetApp() {
-            document.getElementById('uploadSection').classList.remove('hidden');
-            document.getElementById('dashboardSection').classList.add('hidden');
-            document.getElementById('fileInput').value = '';
-            dashboardData = [];
-        }
-
-        // إغلاق القائمة المنسدلة عند النقر خارجها
-        document.addEventListener('click', function(event) {
-            const container = document.getElementById('campDropdownContainer');
-            const dropdown = document.getElementById('dropdownList');
-            if (container && !container.contains(event.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
-
-        function toggleDropdown() {
-            document.getElementById('dropdownList').classList.toggle('hidden');
-            document.getElementById('innerSearch').focus();
-        }
-
-        function filterCamps() {
-            const searchTerm = document.getElementById('innerSearch').value.toLowerCase();
-            const items = document.querySelectorAll('.camp-option');
-            items.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
-            });
-        }
-
-        async function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const btn = document.getElementById('uploadBtn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> جاري معالجة البيانات...`;
-
-            // تغيير العنوان الديناميكي بناءً على اسم الملف
-            const fileName = file.name;
-            const mainTitleEl = document.getElementById('mainTitle');
-            const subBadgeEl = document.getElementById('subBadge');
             
-            if (fileName.includes('الخارج')) {
-                mainTitleEl.textContent = 'تخصيص مواقع إسكان حجاج الخارج بمشعر عرفات لموسم حج 1447 هـ';
-                subBadgeEl.textContent = 'حجاج الخارج بمشعر عرفات';
-            } else if (fileName.includes('الداخل')) {
-                mainTitleEl.textContent = 'تخصيص مواقع إسكان حجاج الداخل بمشعر عرفات لموسم حج 1447 هـ';
-                subBadgeEl.textContent = 'حجاج الداخل بمشعر عرفات';
-            } else {
-                mainTitleEl.textContent = 'تخصيص مواقع إسكان الحجاج بمشعر عرفات لموسم حج 1447 هـ';
-                subBadgeEl.textContent = 'الحجاج بمشعر عرفات';
+            if(message !== "جاري قراءة البيانات...") {
+                setTimeout(() => { if(toast.parentElement) toast.remove(); }, 4000);
             }
+        }
 
+        async function handleFileSelection() {
+            if (window.showOpenFilePicker) {
+                try {
+                    const [handle] = await window.showOpenFilePicker({
+                        types: [{
+                            description: 'Excel Files',
+                            accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+                        }],
+                        multiple: false
+                    });
+                    fileHandle = handle;
+                    const file = await handle.getFile();
+                    processFile(file);
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        document.getElementById('fallbackFileInput').click();
+                    }
+                }
+            } else {
+                document.getElementById('fallbackFileInput').click();
+            }
+        }
+
+        function handleFallbackUpload(event) {
+            fileHandle = null;
+            const file = event.target.files[0];
+            if(file) processFile(file);
+        }
+
+        async function processFile(file) {
+            updateTitleByFileName(file.name);
+            showToast("جاري قراءة بيانات الشيتات...", "success");
+            
             try {
                 const arrayBuffer = await file.arrayBuffer();
-                const workbook = new ExcelJS.Workbook();
-                await workbook.xlsx.load(arrayBuffer);
-                parseData(workbook);
-            } catch (error) {
+                globalWorkbook = new ExcelJS.Workbook();
+                await globalWorkbook.xlsx.load(arrayBuffer);
+                
+                parseAllSheets();
+                showToast("تم قراءة جميع الشيتات بنجاح!", "success");
+            } catch (error) { 
                 console.error(error);
-                showToast("حدث خطأ أثناء قراءة الملف. تأكد من سلامة ملف الإكسيل.");
-            } finally {
-                btn.innerHTML = originalHTML;
+                showToast("حدث خطأ أثناء قراءة الملف.", "error"); 
             }
         }
 
-        function parseData(workbook) {
-            const worksheet = workbook.worksheets[0];
-            if(!worksheet || worksheet.rowCount < 2) {
-                showToast("ملف الإكسيل فارغ أو لا يحتوي على بيانات صحيحة.");
-                return;
+        function updateTitleByFileName(fileName) {
+            const mainTitleEl = document.getElementById('mainTitle');
+            const subBadgeEl = document.getElementById('subBadge');
+            if (fileName.includes('الخارج')) {
+                mainTitleEl.textContent = 'تخصيص مواقع إسكان حجاج الخارج لموسم حج 1447 هـ';
+                subBadgeEl.textContent = 'حجاج الخارج بمشعر عرفات';
+            } else if (fileName.includes('الداخل')) {
+                mainTitleEl.textContent = 'تخصيص مواقع إسكان حجاج الداخل لموسم حج 1447 هـ';
+                subBadgeEl.textContent = 'حجاج الداخل بمشعر عرفات';
             }
+        }
 
-            const headerRow = worksheet.getRow(1).values;
-            let colMap = {};
-            
-            for(let i = 1; i < headerRow.length; i++) {
-                if(headerRow[i]) {
-                    let rawName = headerRow[i].toString();
-                    colMap[rawName.trim()] = i; 
-                    colMap[rawName.replace(/\s+/g, '')] = i; 
+        function parseAllSheets() {
+            sheetsData = {};
+            globalWorkbook.worksheets.forEach(worksheet => {
+                let sheetName = worksheet.name.trim();
+                let rowsData = [];
+                const headerRow = worksheet.getRow(1).values;
+                let colMap = {};
+                for(let i = 1; i < headerRow.length; i++) {
+                    if(headerRow[i]) {
+                        let rawName = headerRow[i].toString();
+                        colMap[rawName.trim()] = i; 
+                        colMap[rawName.replace(/\s+/g, '')] = i; 
+                    }
                 }
-            }
 
-            dashboardData = [];
-            worksheet.eachRow((row, rowNumber) => {
-                if(rowNumber === 1) return;
+                let colIdxAllocated = colMap["عدد الحجاج المخصص"] || colMap["عددالحجاجالمخصص"];
+                let colIdxSurplus = colMap["الفائض"];
+                let colCoords = colMap["الموقع بالاحداثيات"] || colMap["الموقعبالاحداثيات"];
                 
-                const getValue = (keywords) => {
-                    for(let key in colMap) {
-                        for(let word of keywords) {
-                            if(key.includes(word.replace(/\s+/g, ''))) {
-                                let val = row.getCell(colMap[key]).value;
-                                if (val && typeof val === 'object' && val.result !== undefined) val = val.result;
-                                return val;
+                // البحث الشامل عن عمود الـ KML/KMZ وتطبيق شروط الأعمدة (R و N)
+                let colKml = colMap["الموقع kml"] || colMap["الموقعkml"] || colMap["kmz"] || colMap["KMZ"];
+                
+                // تطبيق شروط الأعمدة (R = 18) و (N = 14) حسب طلبك
+                if (sheetName.includes("تشاركية")) {
+                    if (sheetName.includes("مخيمات")) {
+                        colKml = colKml || 18;
+                    } else if (sheetName.includes("ابراج")) {
+                        colKml = colKml || 14;
+                    }
+                }
+
+                worksheet.eachRow((row, rowNumber) => {
+                    if(rowNumber === 1) return;
+                    const getValue = (keywords) => {
+                        for(let key in colMap) {
+                            for(let word of keywords) {
+                                if(key.includes(word.replace(/\s+/g, ''))) {
+                                    let val = row.getCell(colMap[key]).value;
+                                    if (val && typeof val === 'object' && val.result !== undefined) val = val.result;
+                                    return val;
+                                }
+                            }
+                        } return 0;
+                    };
+
+                    let camp = row.getCell(colMap["اسم المخيم"] || colMap["اسمالمخيم"])?.value;
+                    if(!camp) return;
+
+                    let rawCoords = colCoords ? row.getCell(colCoords).value : null;
+                    if (rawCoords && typeof rawCoords === 'object' && rawCoords.result !== undefined) rawCoords = rawCoords.result;
+                    
+                    let lat = null; 
+                    let lng = null;
+                    
+                    if (rawCoords) {
+                        let strCoords = rawCoords.toString().trim();
+                        let parts = strCoords.replace(/[;/]/g, ',').split(',').map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                        if (parts.length < 2) {
+                            parts = strCoords.split(/\s+/).map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                        }
+                        if (parts.length >= 2) {
+                            if (parts[0] > 30) { 
+                                lng = parts[0]; lat = parts[1]; 
+                            } else { 
+                                lat = parts[0]; lng = parts[1]; 
                             }
                         }
                     }
-                    return 0;
-                };
 
-                let camp = row.getCell(colMap["اسم المخيم"] || colMap["اسمالمخيم"]).value;
-                if(!camp) return;
+                    // استخراج الرابط المباشر بذكاء
+                    let rawKml = colKml ? row.getCell(colKml).value : null;
+                    let kmlUrl = null;
+                    if (rawKml) {
+                        let rawStr = '';
+                        if (typeof rawKml === 'string') {
+                            rawStr = rawKml;
+                        } else if (rawKml.richText) {
+                            rawStr = rawKml.richText.map(rt => rt.text).join('');
+                        } else if (rawKml.hyperlink) {
+                            rawStr = rawKml.hyperlink;
+                        } else if (rawKml.text) {
+                            rawStr = rawKml.text;
+                        } else {
+                            rawStr = String(rawKml);
+                        }
+                        kmlUrl = rawStr.trim();
+                    }
 
-                dashboardData.push({
-                    campName: camp.toString().trim(),
-                    totalArea: getValue(["مساحة المخيم الكلية"]),
-                    housingArea: getValue(["المساحة المخصصه للاسكان", "المساحة المخصصة للإسكان"]),
-                    tentArea: getValue(["مساحة الخيام وفق التصميم"]), 
-                    pilgrimsCount: getValue(["عدد الحجاج"]),
-                    companiesCount: getValue(["عدد الشركات"]),
-                    allocatedPilgrims: getValue(["عدد الحجاج المخصص"]),
-                    companyName: row.getCell(colMap["اسم الشركة"] || colMap["اسمالشركة"])?.value || "غير متوفر",
-                    surplus: getValue(["الفائض"])
+                    let rowObj = {
+                        rowNumber: rowNumber,
+                        campName: camp.toString().trim(),
+                        totalArea: getValue(["مساحة المخيم الكلية"]),
+                        housingArea: getValue(["المساحة المخصصه للاسكان", "المساحة المخصصة للإسكان"]),
+                        tentArea: getValue(["مساحة الخيام وفق التصميم"]), 
+                        pilgrimsCount: getValue(["عدد الحجاج"]),
+                        companiesCount: getValue(["عدد الشركات", "عدد الجهات"]),
+                        allocatedPilgrims: getValue(["عدد الحجاج المخصص"]),
+                        surplus: getValue(["الفائض"]),
+                        coordX: lat,
+                        coordY: lng,
+                        kmlUrl: kmlUrl, // يحتوي الآن على الرابط الذي وفرته
+                        colIdxAllocated: colIdxAllocated,
+                        colIdxSurplus: colIdxSurplus,
+                        isShared: sheetName.includes("تشاركية"),
+                        isGov: sheetName.includes("جهات حكومية"),
+                        companies: []
+                    };
+
+                    if (rowObj.isShared) {
+                        let maxComp = sheetName.includes("ابراج") ? 2 : 4;
+                        for (let c = 1; c <= maxComp; c++) {
+                            let compNameKey = `اسم الشركة ${c}`;
+                            let compPilgrimsKey = `حجاج شركة ${c}`;
+                            let cName = row.getCell(colMap[compNameKey] || colMap[`اسم الشركة${c}`])?.value;
+                            let cPilgrims = row.getCell(colMap[compPilgrimsKey] || colMap[`حجاج شركة${c}`])?.value;
+                            if (cName) {
+                                if (cPilgrims && typeof cPilgrims === 'object' && cPilgrims.result !== undefined) cPilgrims = cPilgrims.result;
+                                rowObj.companies.push({
+                                    name: cName.toString().trim(),
+                                    pilgrims: Number(cPilgrims) || 0,
+                                    colIdxName: colMap[compNameKey] || colMap[`اسم الشركة${c}`],
+                                    colIdxPilgrims: colMap[compPilgrimsKey] || colMap[`حجاج شركة${c}`]
+                                });
+                            }
+                        }
+                    } else if (rowObj.isGov) {
+                        let gName = row.getCell(colMap["اسم الجهة الحكومية"] || colMap["اسمالجهةالحكومية"])?.value || "غير متوفر";
+                        rowObj.companies.push({
+                            name: gName.toString().trim(),
+                            pilgrims: rowObj.allocatedPilgrims,
+                            colIdxName: colMap["اسم الجهة الحكومية"] || colMap["اسمالجهةالحكومية"],
+                            colIdxPilgrims: colIdxAllocated
+                        });
+                    } else {
+                        let compName = row.getCell(colMap["اسم الشركة"] || colMap["اسمالشركة"])?.value || "غير متوفر";
+                        rowObj.companies.push({
+                            name: compName.toString().trim(),
+                            pilgrims: rowObj.allocatedPilgrims,
+                            colIdxName: colMap["اسم الشركة"] || colMap["اسمالشركة"],
+                            colIdxPilgrims: colIdxAllocated
+                        });
+                    }
+
+                    rowsData.push(rowObj);
                 });
+
+                if (rowsData.length > 0) {
+                    sheetsData[sheetName] = rowsData;
+                }
             });
 
-            if(dashboardData.length === 0) {
-                showToast("لم يتم العثور على البيانات المطلوبة. يرجى التأكد من عناوين الأعمدة.");
-                return;
+            const sheetNames = Object.keys(sheetsData);
+            if (sheetNames.length > 0) {
+                buildSheetsNavbar(sheetNames);
+                switchSheet(sheetNames[0]);
+                document.getElementById('uploadSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+            } else {
+                showToast("لم يتم العثور على بيانات صالحة في الشيتات.", "error");
+            }
+        }
+
+        function buildSheetsNavbar(sheetNames) {
+            const navbar = document.getElementById('sheetsNavbar');
+            navbar.innerHTML = '';
+            sheetNames.forEach(name => {
+                const btn = document.createElement('button');
+                btn.id = `sheetBtn-${name}`;
+                btn.className = `px-5 py-2.5 rounded-xl font-black text-lg transition-all shadow-sm ${name === currentSheetName ? 'bg-brand-green text-white shadow-md scale-105' : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600'}`;
+                btn.textContent = name;
+                btn.onclick = () => switchSheet(name);
+                navbar.appendChild(btn);
+            });
+        }
+
+        function switchSheet(sheetName) {
+            currentSheetName = sheetName;
+            dashboardData = sheetsData[sheetName] || [];
+            
+            document.querySelectorAll('#sheetsNavbar button').forEach(btn => {
+                if(btn.id === `sheetBtn-${sheetName}`) {
+                    btn.className = "px-5 py-2.5 rounded-xl font-black text-lg transition-all shadow-sm bg-brand-green text-white shadow-md scale-105";
+                } else {
+                    btn.className = "px-5 py-2.5 rounded-xl font-black text-lg transition-all shadow-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600";
+                }
+            });
+
+            const cardCountTitle = document.getElementById('cardCountTitle');
+            const labelSelectCamp = document.getElementById('labelSelectCamp');
+            if (sheetName.includes("جهات حكومية")) {
+                cardCountTitle.textContent = "عدد الجهات";
+                labelSelectCamp.textContent = "البيانات المساحية للجهة :";
+            } else {
+                cardCountTitle.textContent = "عدد الشركات";
+                labelSelectCamp.textContent = "البيانات المساحية للمخيم :";
             }
 
-            document.getElementById('uploadSection').classList.add('hidden');
-            document.getElementById('dashboardSection').classList.remove('hidden');
-            
             populateCampDropdown();
-            selectCamp(dashboardData[0].campName);
+            if(dashboardData.length > 0) {
+                selectCamp(dashboardData[0].campName);
+            }
         }
 
         function populateCampDropdown() {
             const list = document.getElementById('campOptions');
             list.innerHTML = '';
-            
             const uniqueCamps = [...new Set(dashboardData.map(item => item.campName))];
-            
             uniqueCamps.forEach(camp => {
                 const li = document.createElement('li');
-                li.className = "camp-option px-5 py-4 hover:bg-brand-goldLight hover:text-brand-gold cursor-pointer transition-colors border-b border-gray-100 last:border-0 flex items-center gap-2";
-                li.innerHTML = `<svg class="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> <span>${camp}</span>`;
+                li.className = "camp-option px-4 py-3 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b border-gray-100 dark:border-slate-700 flex items-center gap-2 pointer-events-auto";
+                li.innerHTML = `<span>${camp}</span>`;
                 li.onclick = () => selectCamp(camp);
                 list.appendChild(li);
             });
         }
 
+        function toggleDropdown() { document.getElementById('dropdownList').classList.toggle('hidden'); document.getElementById('innerSearch').focus(); }
+        function filterCamps() {
+            const term = document.getElementById('innerSearch').value.toLowerCase();
+            document.querySelectorAll('.camp-option').forEach(item => { item.style.display = item.textContent.toLowerCase().includes(term) ? 'flex' : 'none'; });
+        }
+        document.addEventListener('click', (e) => { if (!document.getElementById('campDropdownContainer').contains(e.target)) document.getElementById('dropdownList').classList.add('hidden'); });
+
         function selectCamp(campName) {
             document.getElementById('campSearchInput').value = campName;
             document.getElementById('dropdownList').classList.add('hidden');
+            document.getElementById('saveChangesBtn').classList.add('hidden');
+            currentCampData = dashboardData.find(d => d.campName === campName);
             
-            let targetData = dashboardData.find(d => d.campName === campName);
+            document.getElementById("val-totalArea").textContent = formatNumber(currentCampData.totalArea);
+            document.getElementById("val-housingArea").textContent = formatNumber(currentCampData.housingArea);
+            document.getElementById("val-tentArea").textContent = formatNumber(currentCampData.tentArea);
+            document.getElementById("val-pilgrims").textContent = formatNumber(currentCampData.pilgrimsCount);
+            document.getElementById("val-companiesCount").textContent = formatNumber(currentCampData.companiesCount || currentCampData.companies.length);
+            document.getElementById("val-allocated-input").value = currentCampData.allocatedPilgrims;
 
-            animateValue("val-totalArea", targetData.totalArea);
-            animateValue("val-housingArea", targetData.housingArea);
-            animateValue("val-tentArea", targetData.tentArea);
-            animateValue("val-pilgrims", targetData.pilgrimsCount);
-            
-            document.getElementById("val-companyName").textContent = targetData.companyName;
-            animateValue("val-companyPilgrims", targetData.allocatedPilgrims);
-            
-            animateValue("val-allocated", targetData.allocatedPilgrims);
-            animateValue("val-companiesCount", targetData.companiesCount);
-
-            updateChart(targetData.allocatedPilgrims, targetData.surplus, targetData.pilgrimsCount);
+            renderCompanyDisplaySlot();
+            updateChart();
+            renderMap(currentCampData.coordX, currentCampData.coordY, currentCampData.campName, currentCampData.kmlUrl);
         }
 
-        function formatNumber(num) {
-            return Number(num).toLocaleString('en-US', { maximumFractionDigits: 0 });
-        }
-
-        function animateValue(id, endValue) {
-            const obj = document.getElementById(id);
-            if(!obj) return;
-            const startValue = parseInt(obj.textContent.replace(/,/g, '')) || 0;
-            const duration = 800; 
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                const easeOut = progress * (2 - progress);
-                const current = Math.floor(easeOut * (endValue - startValue) + startValue);
-                obj.textContent = formatNumber(current);
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                } else {
-                    obj.textContent = formatNumber(endValue);
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        function updateChart(allocated, surplus, total) {
-            const ctx = document.getElementById('doughnutCanvas').getContext('2d');
+        // --- دالة رسم الخريطة المتجاوبة من خلال رابط Github المباشر ---
+        function renderMap(lat, lng, campName, kmlUrl) {
+            document.getElementById('coordsText').textContent = campName;
             
-            if(doughnutChartInstance) {
-                doughnutChartInstance.destroy();
+            const mapContainer = document.getElementById('mapContainer');
+            const fallbackContainer = document.getElementById('mapFallback');
+            const btnOpenMaps = document.getElementById('btnOpenGoogleMaps');
+
+            // 1. تحديث زر الفتح على جوجل ماب بالإحداثيات
+            if (lat !== null && lng !== null) {
+                btnOpenMaps.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+                btnOpenMaps.classList.remove('hidden');
+            } else {
+                btnOpenMaps.classList.add('hidden');
             }
 
-            let allocatedPct = total > 0 ? Math.round((allocated / total) * 100) : 0;
+            // 2. التحقق من وجود بيانات للخريطة
+            if (!kmlUrl && lat === null && lng === null) {
+                mapContainer.style.display = 'none';
+                fallbackContainer.style.display = 'flex';
+                return;
+            }
+
+            mapContainer.style.display = 'block';
+            fallbackContainer.style.display = 'none';
+            mapContainer.innerHTML = ''; 
+
+            let finalUrl = null;
+
+            // 3. تأمين وقراءة الرابط اللي جاي من الإكسيل (مهما كان شكله)
+            if (kmlUrl && (kmlUrl.startsWith('http://') || kmlUrl.startsWith('https://'))) {
+                finalUrl = kmlUrl;
+            }
+
+            // 4. رسم الخريطة عن طريق إنشاء Iframe يأخذ 100% من المساحة المتاحة
+            if (finalUrl) {
+                mapContainer.innerHTML = `<iframe src="${finalUrl}" class="w-full h-full border-0" style="width: 100%; height: 100%; min-height: 400px;" loading="lazy" allowfullscreen></iframe>`;
+            } else if (lat !== null && lng !== null) {
+                // بديل: رسم خريطة جوجل ماب الافتراضية للنقطة
+                mapContainer.innerHTML = `<iframe src="https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed" class="w-full h-full border-0" style="width: 100%; height: 100%; min-height: 400px;" loading="lazy" allowfullscreen></iframe>`;
+            } else {
+                mapContainer.style.display = 'none';
+                fallbackContainer.style.display = 'flex';
+            }
+        }
+
+        function renderCompanyDisplaySlot() {
+            const slot = document.getElementById('companyDisplaySlot');
+            slot.innerHTML = '';
+
+            if (currentCampData.isShared) {
+                currentCampData.companies.forEach((comp, idx) => {
+                    let box = document.createElement('div');
+                    box.className = "bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl p-2 flex flex-col items-center text-center shadow-sm flex-grow justify-center";
+                    box.innerHTML = `
+                        <div class="text-brand-green dark:text-brand-gold font-bold text-xs leading-tight mb-0.5">${comp.name}</div>
+                        <div class="text-brand-gold font-black text-base flex gap-1 items-baseline">
+                            <span>${formatNumber(comp.pilgrims)}</span> <span class="text-[10px]">حاج</span>
+                        </div>
+                    `;
+                    slot.appendChild(box);
+                });
+            } else {
+                let comp = currentCampData.companies[0] || { name: "غير متوفر", pilgrims: currentCampData.allocatedPilgrims };
+                slot.innerHTML = `
+                    <div class="p-4 text-center flex flex-col justify-center items-center flex-grow gap-3 bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl shadow-sm">
+                        <h3 class="text-lg font-black text-brand-green dark:text-white leading-snug">${comp.name}</h3>
+                        <div class="border-2 border-brand-gold text-brand-gold px-3 py-1 rounded-xl font-black text-lg bg-brand-goldLight dark:bg-slate-700 flex gap-1 items-baseline">
+                            <span>${formatNumber(comp.pilgrims)}</span> <span class="text-xs">حاج</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function handleAllocatedChange() {
+            if(!currentCampData) return;
+            let newVal = parseInt(document.getElementById("val-allocated-input").value) || 0;
+            let total = currentCampData.pilgrimsCount;
+            let newSurplus = Math.max(0, total - newVal);
+            currentCampData.allocatedPilgrims = newVal;
+            currentCampData.surplus = newSurplus;
+            if (currentCampData.companies.length > 0) {
+                currentCampData.companies[0].pilgrims = newVal;
+            }
+            renderCompanyDisplaySlot();
+            updateChart();
+            document.getElementById('saveChangesBtn').classList.remove('hidden');
+        }
+
+        async function saveDataToFile() {
+            if(!globalWorkbook || !currentCampData) return;
+            showToast("جاري حفظ التغيرات على الشيت...", "success");
+            
+            const ws = globalWorkbook.getWorksheet(currentSheetName);
+            const row = ws.getRow(currentCampData.rowNumber);
+
+            if (currentCampData.colIdxAllocated) {
+                row.getCell(currentCampData.colIdxAllocated).value = currentCampData.allocatedPilgrims;
+            }
+            if (currentCampData.colIdxSurplus) {
+                row.getCell(currentCampData.colIdxSurplus).value = currentCampData.surplus;
+            }
+            if (currentCampData.isShared) {
+                currentCampData.companies.forEach(comp => {
+                    if (comp.colIdxPilgrims) {
+                        row.getCell(comp.colIdxPilgrims).value = comp.pilgrims;
+                    }
+                });
+            }
+            row.commit();
+
+            try {
+                const buffer = await globalWorkbook.xlsx.writeBuffer();
+                
+                if (fileHandle && fileHandle.createWritable) {
+                    try {
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(buffer);
+                        await writable.close();
+                        showToast("تم تحديث الملف الأصلي بنجاح.");
+                        document.getElementById('saveChangesBtn').classList.add('hidden');
+                        return;
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+                
+                const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = "محدث_بيانات_المخيمات.xlsx";
+                link.click();
+                showToast("تم تحميل النسخة المعدلة بنجاح.");
+                document.getElementById('saveChangesBtn').classList.add('hidden');
+            } catch (err) { showToast("حدث خطأ أثناء محاولة الحفظ.", "error"); }
+        }
+
+        function formatNumber(num) { return Number(num).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+
+        function updateChart(isExport = false) {
+            const ctx = document.getElementById('doughnutCanvas').getContext('2d');
+            if(doughnutChartInstance) doughnutChartInstance.destroy();
+
+            let labels = [];
+            let dataValues = [];
+            let bgColors = ['#c79a55', '#125243', '#196d5a', '#d97706', '#0284c7'];
+
+            let total = currentCampData.pilgrimsCount;
+
+            if (currentCampData.isShared && currentCampData.companies.length > 0) {
+                currentCampData.companies.forEach((comp, idx) => {
+                    let pct = total > 0 ? Math.round((comp.pilgrims / total) * 100) : 0;
+                    labels.push(`${comp.name} (${pct}%)`);
+                    dataValues.push(comp.pilgrims);
+                });
+            } else {
+                let allocated = currentCampData.allocatedPilgrims;
+                let allocatedPct = total > 0 ? Math.round((allocated / total) * 100) : 0;
+                labels.push(`المخصص (${allocatedPct}%)`);
+                dataValues.push(allocated);
+            }
+
+            let surplus = currentCampData.surplus;
             let surplusPct = total > 0 ? Math.round((surplus / total) * 100) : 0;
+            labels.push(`الفائض (${surplusPct}%)`);
+            dataValues.push(surplus);
+
+            const isDark = document.documentElement.classList.contains('dark') && !isExport && !document.getElementById('printableDashboard').classList.contains('exporting-mode');
 
             doughnutChartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: [`المخصص ${allocatedPct}%`, `الفائض ${surplusPct}%`],
-                    datasets: [{
-                        data: [allocated, surplus],
-                        backgroundColor: ['#c79a55', '#125243'], 
-                        borderWidth: 0,
-                        hoverOffset: 8
-                    }]
-                },
+                data: { labels: labels, datasets: [{ data: dataValues, backgroundColor: bgColors.slice(0, dataValues.length), borderWidth: 0, hoverOffset: 0 }] },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '75%', 
-                    elements: {
-                        center: {
-                            text: formatNumber(total) // القيمة التي ستُطبع في المركز باستخدام الـ Plugin
-                        }
-                    },
-                    layout: {
-                        padding: { bottom: 20 }
-                    },
+                    responsive: true, maintainAspectRatio: false, cutout: '75%', 
+                    animation: isExport ? false : { duration: 600 },
+                    elements: { center: { text: formatNumber(total) } },
+                    layout: { padding: { bottom: 15 } },
                     plugins: {
-                        legend: {
-                            display: true,
-                            position: 'bottom', 
-                            labels: {
-                                font: { family: 'Tajawal', size: 14, weight: 'bold' },
-                                color: '#125243',
-                                usePointStyle: true,
-                                padding: 25
-                            }
-                        },
-                        tooltip: {
-                            rtl: true,
-                            backgroundColor: 'rgba(25, 109, 90, 0.9)', 
-                            titleFont: { family: 'Tajawal', size: 14 },
-                            bodyFont: { family: 'Tajawal', size: 15, weight: 'bold' },
-                            padding: 12,
-                            cornerRadius: 8,
-                            displayColors: false
-                        }
+                        legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 12, weight: 'bold' }, color: isDark ? '#ffffff' : '#125243', usePointStyle: true, padding: 15 } },
+                        tooltip: { rtl: true, titleFont: { family: 'Tajawal', size: 14 }, bodyFont: { family: 'Tajawal', size: 14, weight: 'bold' }, displayColors: false }
                     }
                 }
             });
+        }
+
+        function resetApp() { location.reload(); }
+
+        async function prepareForExport() {
+            document.getElementById('toastContainer').innerHTML = '';
+            showToast("جاري التقاط الصورة وتصدير التقرير...", "success");
+            const element = document.getElementById('printableDashboard');
+            
+            const wasDark = document.documentElement.classList.contains('dark');
+            if(wasDark) document.documentElement.classList.remove('dark');
+
+            element.classList.add('exporting-mode');
+            document.getElementById('dropdownList').classList.add('hidden');
+            document.getElementById('exportLogos').classList.add('flex');
+            document.getElementById('exportLogos').classList.remove('hidden');
+            
+            const inputEl = document.getElementById('val-allocated-input');
+            const tempSpan = document.createElement('span');
+            tempSpan.id = 'tempExportSpan';
+            tempSpan.className = 'text-5xl font-black text-brand-green m-0 p-0 text-center inline-block w-[100px]';
+            tempSpan.innerText = inputEl.value;
+            inputEl.parentNode.insertBefore(tempSpan, inputEl);
+            inputEl.style.display = 'none'; 
+            
+            if(currentCampData) updateChart(true);
+            await new Promise(r => setTimeout(r, 800));
+            return { element, wasDark };
+        }
+
+        function restoreAfterExport(element, wasDark) {
+            element.classList.remove('exporting-mode');
+            document.getElementById('exportLogos').classList.remove('flex');
+            document.getElementById('exportLogos').classList.add('hidden');
+            
+            const inputEl = document.getElementById('val-allocated-input');
+            const tempSpan = document.getElementById('tempExportSpan');
+            if(tempSpan) tempSpan.remove();
+            inputEl.style.display = '';
+
+            if(wasDark) document.documentElement.classList.add('dark');
+            if(currentCampData) updateChart(false);
+        }
+
+        async function exportPDF() {
+            let config = null;
+            try {
+                config = await prepareForExport();
+                const canvas = await html2canvas(config.element, { 
+                    scale: 2, windowWidth: 1400, backgroundColor: "#ffffff", useCORS: true, allowTaint: true
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('l', 'mm', 'a3');
+                const pdfWidth = 420; const pdfHeight = 297; 
+                
+                const imgRatio = canvas.width / canvas.height;
+                let finalW = pdfWidth - 20; let finalH = finalW / imgRatio;
+                if (finalH > (pdfHeight - 20)) { finalH = pdfHeight - 20; finalW = finalH * imgRatio; }
+                const xPos = (pdfWidth - finalW) / 2; const yPos = (pdfHeight - finalH) / 2;
+                
+                pdf.addImage(imgData, 'PNG', xPos, yPos, finalW, finalH);
+                pdf.save("تقرير_تخصيص_المواقع.pdf");
+                showToast("تم تنزيل الـ PDF بنجاح!", "success");
+            } catch(e) { 
+                showToast("خطأ أثناء التصدير للـ PDF.", "error"); 
+                console.error(e);
+            } finally { if(config) restoreAfterExport(config.element, config.wasDark); }
+        }
+
+        async function exportPPTX() {
+            let config = null;
+            try {
+                if (typeof PptxGenJS === 'undefined') {
+                    showToast("مكتبة الباوربوينت غير متوفرة.", "error");
+                    return;
+                }
+
+                config = await prepareForExport();
+                const canvas = await html2canvas(config.element, { 
+                    scale: 2, windowWidth: 1400, backgroundColor: "#ffffff", useCORS: true, allowTaint: true
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                let pptx = new PptxGenJS();
+                pptx.layout = 'LAYOUT_16x9'; 
+                let slide = pptx.addSlide();
+                
+                const slideW = 10; const slideH = 5.625;
+                const imgRatio = canvas.width / canvas.height;
+                let finalW = slideW - 0.4; let finalH = finalW / imgRatio;
+                if (finalH > (slideH - 0.4)) { finalH = slideH - 0.4; finalW = finalH * imgRatio; }
+                const xPos = (slideW - finalW) / 2; const yPos = (slideH - finalH) / 2;
+                
+                slide.addImage({ data: imgData, x: xPos, y: yPos, w: finalW, h: finalH });
+                await pptx.writeFile({ fileName: 'عرض_تخصيص_المواقع.pptx' });
+                showToast("تم تنزيل الباوربوينت بنجاح!", "success");
+            } catch(e) { 
+                showToast("خطأ أثناء التصدير للـ PPTX.", "error"); 
+                console.error(e);
+            } finally { if(config) restoreAfterExport(config.element, config.wasDark); }
         }
     </script>
 </body>
