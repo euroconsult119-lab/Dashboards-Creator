@@ -114,6 +114,7 @@
 
     <div id="toastContainer" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-3 w-full max-w-md px-4 pointer-events-none"></div>
 
+    <!-- الهيدر الرئيسي -->
     <header class="bg-white dark:bg-brand-cardDark shadow-sm relative z-20 border-b-[3px] border-brand-gold no-print transition-colors duration-300">
         <div class="container mx-auto px-4 md:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-6 bg-white dark:bg-slate-800 px-4 py-1 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
@@ -122,12 +123,15 @@
                 <img id="logoMin" class="h-12 object-contain filter dark:brightness-0 dark:invert" alt="وزارة الحج والعمرة">
             </div>
             <div class="flex items-center gap-3">
-                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-brand-gold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors shadow-sm">
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-brand-gold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors shadow-sm" title="الوضع الليلي / النهاري">
                     <svg id="moonIcon" class="w-6 h-6 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     <svg id="sunIcon" class="w-6 h-6 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 </button>
-                <button onclick="resetApp()" class="flex items-center gap-2 bg-brand-gold hover:bg-brand-goldHover text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all">
-                    رفع ملف جديد
+                <button id="logoutBtn" onclick="logout()" class="hidden flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all">
+                    تسجيل الخروج
+                </button>
+                <button id="uploadNewBtn" onclick="resetApp()" class="hidden flex items-center gap-2 bg-brand-gold hover:bg-brand-goldHover text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all">
+                    العودة للخيارات
                 </button>
             </div>
         </div>
@@ -135,19 +139,64 @@
 
     <main class="container mx-auto px-4 md:px-8 py-6 flex-grow relative z-10">
         
-        <div id="uploadSection" class="glass-card bg-white dark:bg-brand-cardDark rounded-3xl p-12 text-center max-w-2xl mx-auto mt-10">
+        <!-- 1. شاشة تسجيل الدخول -->
+        <div id="loginSection" class="glass-card bg-white dark:bg-brand-cardDark rounded-3xl p-10 md:p-12 text-center max-w-md mx-auto mt-10 shadow-xl">
             <div class="w-20 h-20 bg-brand-goldLight dark:bg-brand-goldDark rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-brand-gold">
-                <svg class="w-10 h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <svg class="w-10 h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
             </div>
-            <h2 class="text-3xl font-black text-brand-green dark:text-brand-gold mb-3">النظام الآلي لتحليل البيانات</h2>
-            <p class="text-gray-500 dark:text-gray-400 mb-8 font-medium">قم برفع شيت الإكسيل (المتعدد الشيتات) لعرض الداش بورد والتعديل المباشر.</p>
-            <button onclick="handleFileSelection()" class="inline-flex items-center justify-center px-10 py-4 text-xl font-bold rounded-2xl text-white bg-brand-green hover:bg-brand-greenDark transition-all shadow-lg gap-3 mx-auto pointer-events-auto">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                <span>استعراض وفتح الملف</span>
-            </button>
-            <input type="file" id="fallbackFileInput" accept=".xlsx" class="hidden" onchange="handleFallbackUpload(event)">
+            <h2 class="text-3xl font-black text-brand-green dark:text-brand-gold mb-2">تسجيل الدخول</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-8 font-medium">الرجاء إدخال بيانات الدخول للوصول للمنصة</p>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-5 text-right">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">اسم المستخدم:</label>
+                    <input type="text" id="usernameInput" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-white focus:border-brand-gold focus:outline-none transition-colors font-bold" placeholder="أدخل اسم المستخدم">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">كلمة المرور:</label>
+                    <input type="password" id="passwordInput" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-white focus:border-brand-gold focus:outline-none transition-colors font-bold" placeholder="••••••••">
+                </div>
+                <button type="submit" class="w-full py-4 text-xl font-bold rounded-xl text-white bg-brand-green hover:bg-brand-greenDark transition-all shadow-lg">
+                    دخول للمنصة
+                </button>
+            </form>
         </div>
 
+        <!-- 2. شاشة اختيار المنصة (حجاج الداخل / الخارج) -->
+        <div id="selectionSection" class="hidden glass-card bg-white dark:bg-brand-cardDark rounded-3xl p-12 text-center max-w-4xl mx-auto mt-10">
+            <h2 class="text-3xl font-black text-brand-green dark:text-brand-gold mb-3">اختر المنصة المساحية</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-10 font-medium">قم باختيار البيانات المطلوب استعراضها ليتم عرضها تلقائياً</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- زر حجاج الداخل -->
+                <button onclick="loadGoogleSheet('internal')" class="group p-8 rounded-3xl border-2 border-brand-green/30 hover:border-brand-green bg-brand-goldLight dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 transition-all shadow-md hover:shadow-2xl flex flex-col items-center justify-center gap-4">
+                    <div class="w-24 h-24 bg-brand-green text-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    </div>
+                    <span class="text-3xl font-black text-brand-green dark:text-white">حجاج الداخل</span>
+                    <span class="text-sm font-bold text-gray-500 dark:text-gray-400">بيانات التخصيص والمساحات لحجاج الداخل</span>
+                </button>
+
+                <!-- زر حجاج الخارج -->
+                <button onclick="loadGoogleSheet('external')" class="group p-8 rounded-3xl border-2 border-brand-gold/30 hover:border-brand-gold bg-brand-goldLight dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 transition-all shadow-md hover:shadow-2xl flex flex-col items-center justify-center gap-4">
+                    <div class="w-24 h-24 bg-brand-gold text-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h30.68"></path></svg>
+                    </div>
+                    <span class="text-3xl font-black text-brand-gold dark:text-brand-gold">حجاج الخارج</span>
+                    <span class="text-sm font-bold text-gray-500 dark:text-gray-400">بيانات التخصيص والدول لحجاج الخارج</span>
+                </button>
+            </div>
+            
+            <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
+                <button onclick="handleFileSelection()" class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-brand-gold transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    أو اختيار ملف إكسيل من جهازك
+                </button>
+                <input type="file" id="fallbackFileInput" accept=".xlsx" class="hidden" onchange="handleFallbackUpload(event)">
+            </div>
+        </div>
+
+        <!-- 3. شاشة الداشبورد وعرض البيانات -->
         <div id="dashboardSection" class="hidden max-w-[1300px] mx-auto">
             
             <div id="sheetsNavbar" class="flex flex-wrap justify-center items-center gap-3 bg-white dark:bg-brand-cardDark shadow-md p-3 rounded-2xl mb-6 border border-gray-200 dark:border-slate-700 no-print transition-colors"></div>
@@ -211,15 +260,17 @@
                                 </div>
                             </div>
                         </div>
+
                         <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
-                            <div class="bg-brand-gold text-white py-3 text-center font-bold text-lg">المساحة المخصصة للإسكان</div>
+                            <div id="title-card2" class="bg-brand-gold text-white py-3 text-center font-bold text-lg">المساحة المخصصة للإسكان</div>
                             <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
-                                <div class="flex items-baseline justify-center gap-2">
+                                <div class="flex items-baseline justify-center gap-2 text-center" id="content-card2">
                                     <span class="text-4xl font-black text-brand-green dark:text-white" id="val-housingArea">0</span>
-                                    <span class="text-lg font-bold text-gray-500 dark:text-gray-400">م²</span>
+                                    <span class="text-lg font-bold text-gray-500 dark:text-gray-400" id="unit-housingArea">م²</span>
                                 </div>
                             </div>
                         </div>
+
                         <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
                             <div class="bg-brand-gold text-white py-3 text-center font-bold text-lg">مساحة الخيام وفق التصميم 5*5</div>
                             <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
@@ -272,7 +323,6 @@
                         </div>
                     </div>
 
-                    <!-- قسم الخريطة التفاعلية -->
                     <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl p-6 relative z-10 shadow-sm mb-4">
                         <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4 border-b border-gray-100 dark:border-slate-700 pb-4">
                             <h3 class="text-xl font-black text-brand-green dark:text-brand-gold flex items-center gap-2">
@@ -281,12 +331,10 @@
                             </h3>
                             
                             <div class="flex items-center gap-3 flex-wrap justify-center">
-                                <!-- زر فتح على جوجل ماب -->
                                 <a id="btnOpenGoogleMaps" target="_blank" href="#" class="hidden bg-brand-gold hover:bg-brand-goldHover text-white px-5 py-2.5 rounded-xl font-bold shadow-sm flex items-center gap-2 transition-all no-print pointer-events-auto">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
                                     فتح على جوجل ماب
                                 </a>
-                                <!-- اسم المخيم -->
                                 <div id="coordsText" class="text-lg font-black bg-brand-goldLight dark:bg-slate-700 text-brand-green dark:text-brand-gold px-6 py-2.5 rounded-xl border border-brand-gold/30 shadow-sm">
                                     --
                                 </div>
@@ -294,24 +342,25 @@
                         </div>
                         
                         <div class="w-full h-[400px] rounded-xl overflow-hidden border-2 border-brand-gold/40 relative bg-gray-100 dark:bg-slate-800 pointer-events-auto z-10">
-                            <!-- حاوية الخريطة -->
                             <div id="mapContainer" class="w-full h-full z-10"></div>
-                            
-                            <!-- رسالة بديلة في حال عدم وجود إحداثيات أو لينك -->
                             <div id="mapFallback" class="hidden absolute inset-0 z-20 flex items-center justify-center text-xl font-bold text-gray-500 bg-gray-50 dark:bg-slate-800 text-center px-4">
                                 عذراً.. لم يتم إرفاق إحداثيات أو خريطة مخصصة لهذا المخيم في ملف الإكسيل
                             </div>
                         </div>
                     </div>
 
-                </div> <!-- /dataContainer -->
-            </div> <!-- /printableDashboard -->
+                </div>
+            </div>
         </div>
     </main>
 
     <script>
         Chart.defaults.font.family = 'Tajawal';
         
+        // ================== ضع رابط الـ Web App الخاص بك هنا ==================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysyqa9GXCKVC5HoXBJvjSo_ve-54brRThuaOCrIfYV6ZGYyBEob7SBLnan3Nus5dKa/exec";
+        // ==============================================================================
+
         let globalWorkbook = null;
         let sheetsData = {};
         let currentSheetName = "";
@@ -319,6 +368,7 @@
         let doughnutChartInstance = null;
         let currentCampData = null;
         let fileHandle = null;
+        let isExternal = false;
 
         const URL_LOGO_EC = "https://iili.io/CwET9t9.png";
         const URL_LOGO_MIN = "https://upload.wikimedia.org/wikipedia/ar/thumb/a/ac/%D8%B4%D8%B9%D8%A7%D8%B1_%D9%88%D8%B2%D8%A7%D8%B1%D8%A9_%D8%A7%D9%84%D8%AD%D8%AC_%D9%88%D8%A7%D9%84%D8%B9%D9%85%D8%B1%D8%A9.svg/3840px-%D8%B4%D8%B9%D8%A7%D8%B1_%D9%88%D8%B2%D8%A7%D8%B1%D8%A9_%D8%A7%D9%84%D8%AD%D8%AC_%D9%88%D8%A7%D9%84%D8%B9%D9%85%D8%B1%D8%A9.svg.png";
@@ -328,58 +378,255 @@
             document.getElementById('exportLogoEC').src = URL_LOGO_EC;
             document.getElementById('logoMin').src = URL_LOGO_MIN;
             document.getElementById('exportLogoMin').src = URL_LOGO_MIN;
+            
+            if (sessionStorage.getItem("isLoggedIn") === "true") {
+                showSelectionScreen();
+            }
         });
 
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            if(doughnutChartInstance && currentCampData) {
-                updateChart();
-            }
-        }
+        // ================== نظام الدخول ==================
+        async function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('usernameInput').value.trim();
+            const p = document.getElementById('passwordInput').value.trim();
+            
+            showToast("جاري التحقق من الحساب...", "success");
 
-        const centerTextPlugin = {
-            id: 'centerText',
-            afterDraw: (chart) => {
-                if (chart.config.options.elements && chart.config.options.elements.center) {
-                    const ctx = chart.ctx;
-                    const centerConfig = chart.config.options.elements.center;
-                    const meta = chart.getDatasetMeta(0);
-                    if (meta.data && meta.data.length > 0) {
-                        const centerX = meta.data[0].x;
-                        const centerY = meta.data[0].y;
-                        const isDark = document.documentElement.classList.contains('dark') && !document.getElementById('printableDashboard').classList.contains('exporting-mode');
-                        
-                        ctx.save();
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.font = 'bold 14px Tajawal';
-                        ctx.fillStyle = '#9ca3af';
-                        ctx.fillText('الإجمالي', centerX, centerY - 15);
-                        ctx.font = '900 28px Tajawal';
-                        ctx.fillStyle = isDark ? '#ffffff' : '#125243';
-                        ctx.fillText(centerConfig.text, centerX, centerY + 15);
-                        ctx.restore();
-                    }
+            if (SCRIPT_URL.includes("XXXXX")) {
+                if (u === "admin" && p === "12345") {
+                    sessionStorage.setItem("isLoggedIn", "true");
+                    showToast("تم تسجيل الدخول بنجاح!", "success");
+                    showSelectionScreen();
+                    return;
+                } else {
+                    showToast("برجاء ربط رابط SCRIPT_URL أولاً، أو الدخول تجريبياً بحساب admin / 12345", "error");
+                    return;
                 }
             }
-        };
-        Chart.register(centerTextPlugin);
 
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            if(type === 'success' || type === 'error') { container.innerHTML = ''; }
-            
-            const toast = document.createElement('div');
-            const bgColor = type === 'error' ? 'bg-red-500' : 'bg-brand-green';
-            toast.className = `flex items-center p-4 w-full text-white ${bgColor} rounded-xl shadow-2xl transition-all z-[999]`;
-            toast.innerHTML = `<div class="font-bold flex-grow text-center">${message}</div>`;
-            container.appendChild(toast);
-            
-            if(message !== "جاري قراءة البيانات...") {
-                setTimeout(() => { if(toast.parentElement) toast.remove(); }, 4000);
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`);
+                const json = await res.json();
+                
+                if (json.success) {
+                    sessionStorage.setItem("isLoggedIn", "true");
+                    showToast(json.message || "تم تسجيل الدخول بنجاح!", "success");
+                    showSelectionScreen();
+                } else {
+                    showToast(json.message || "بيانات الدخول غير صحيحة", "error");
+                }
+            } catch (err) {
+                console.error("خطأ في الاتصال:", err);
+                if (u === "admin" && p === "12345") {
+                    sessionStorage.setItem("isLoggedIn", "true");
+                    showToast("تم تسجيل الدخول", "success");
+                    showSelectionScreen();
+                } else {
+                    showToast("تعذر الاتصال بالخادم. برجاء المحاولة لاحقاً", "error");
+                }
             }
         }
 
+        function showSelectionScreen() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('selectionSection').classList.remove('hidden');
+            document.getElementById('logoutBtn').classList.remove('hidden');
+            document.getElementById('uploadNewBtn').classList.add('hidden');
+        }
+
+        function logout() {
+            sessionStorage.removeItem("isLoggedIn");
+            location.reload();
+        }
+
+        function resetApp() {
+            showSelectionScreen();
+        }
+
+        // ================== جلب الشيت (داخل / خارج) عبر رابط جوجل ==================
+        async function loadGoogleSheet(type) {
+            const action = type === 'internal' ? 'getInternal' : 'getExternal';
+            const fileName = type === 'internal' ? 'شيت الداخل.xlsx' : 'شيت الخارج.xlsx';
+            
+            showToast("جاري تحميل البيانات...", "success");
+
+            if (SCRIPT_URL.includes("XXXXX")) {
+                showToast("تنبيه: لم تقم بوضع SCRIPT_URL في الكود بعد! يمكنك رفع ملف الإكسيل يدوياً من أسفل الشاشة.", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=${action}`);
+                const json = await res.json();
+                
+                if (json.success && json.data) {
+                    parseSheetsJson(json.data, fileName);
+                } else {
+                    showToast("حدث خطأ أثناء تحميل البيانات: " + (json.error || ""), "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("تعذر تحميل البيانات. يمكنك اختيار الملف يدوياً من أسفل الشاشة.", "error");
+            }
+        }
+
+        // تحويل استجابة الـ JSON الواردة من Google Apps Script لـ Dashboard Data
+        function parseSheetsJson(jsonSheets, fileName) {
+            updateTitleByFileName(fileName);
+            sheetsData = {};
+
+            Object.keys(jsonSheets).forEach(sheetName => {
+                const rows = jsonSheets[sheetName];
+                if (!rows || rows.length <= 1) return;
+
+                const headerRow = rows[0];
+                let colMap = {};
+                for (let i = 0; i < headerRow.length; i++) {
+                    if (headerRow[i] !== undefined && headerRow[i] !== null) {
+                        let rawName = String(headerRow[i]).trim();
+                        colMap[rawName] = i;
+                        colMap[rawName.replace(/\s+/g, '')] = i;
+                    }
+                }
+
+                let colIdxAllocated = colMap["عدد الحجاج المخصص"] !== undefined ? colMap["عدد الحجاج المخصص"] : colMap["عددالحجاجالمخصص"];
+                let colIdxSurplus = colMap["الفائض"];
+                let colCoords = colMap["XY"] !== undefined ? colMap["XY"] : (colMap["xy"] !== undefined ? colMap["xy"] : (colMap["الموقع بالاحداثيات"] !== undefined ? colMap["الموقع بالاحداثيات"] : (colMap["الموقعبالاحداثيات"] !== undefined ? colMap["الموقعبالاحداثيات"] : (colMap["احداثيات"] !== undefined ? colMap["احداثيات"] : colMap["الإحداثيات"]))));
+                let colKml = colMap["الموقع kml"] !== undefined ? colMap["الموقع kml"] : (colMap["الموقعkml"] !== undefined ? colMap["الموقعkml"] : (colMap["kmz"] !== undefined ? colMap["kmz"] : colMap["KMZ"]));
+
+                if (!isExternal && sheetName.includes("تشاركية")) {
+                    if (sheetName.includes("مخيمات")) colKml = colKml !== undefined ? colKml : 17;
+                    else if (sheetName.includes("ابراج")) colKml = colKml !== undefined ? colKml : 13;
+                }
+
+                let rowsData = [];
+
+                for (let r = 1; r < rows.length; r++) {
+                    const row = rows[r];
+                    const getVal = (keywords) => {
+                        for (let key in colMap) {
+                            for (let word of keywords) {
+                                if (key.includes(word.replace(/\s+/g, ''))) {
+                                    let v = row[colMap[key]];
+                                    return v !== undefined && v !== null ? (Number(v) || 0) : 0;
+                                }
+                            }
+                        }
+                        return 0;
+                    };
+
+                    let campIdx = colMap["اسم المخيم"] !== undefined ? colMap["اسم المخيم"] : colMap["اسمالمخيم"];
+                    let camp = campIdx !== undefined ? row[campIdx] : null;
+                    if (!camp || String(camp).trim() === "") continue;
+
+                    let rawCoords = colCoords !== undefined ? row[colCoords] : null;
+                    let lat = null, lng = null;
+                    if (rawCoords) {
+                        let strCoords = String(rawCoords).trim();
+                        let parts = strCoords.replace(/[;/]/g, ',').split(',').map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                        if (parts.length < 2) parts = strCoords.split(/\s+/).map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                        if (parts.length >= 2) {
+                            if (parts[0] > 30) { lng = parts[0]; lat = parts[1]; }
+                            else { lat = parts[0]; lng = parts[1]; }
+                        }
+                    }
+
+                    let rawKml = colKml !== undefined ? row[colKml] : null;
+                    let kmlUrl = rawKml ? String(rawKml).trim() : null;
+
+                    let tentAreaVal = getVal(["مساحة الخيام وفق التصميم"]);
+                    let allocatedPilgrimsVal = getVal(["عدد الحجاج المخصص"]);
+
+                    let occupancyRate = 0;
+                    if (isExternal) {
+                        occupancyRate = (allocatedPilgrimsVal > 0) ? (tentAreaVal / allocatedPilgrimsVal) : 0;
+                    }
+
+                    let rowObj = {
+                        rowNumber: r + 1,
+                        campName: String(camp).trim(),
+                        totalArea: getVal(["مساحة المخيم الكلية"]),
+                        housingArea: getVal(["المساحة المخصصه للاسكان", "المساحة المخصصة للإسكان"]),
+                        tentArea: tentAreaVal,
+                        pilgrimsCount: getVal(["عدد الحجاج"]),
+                        companiesCount: getVal(["عدد الشركات", "عدد الجهات", "عدد الدول"]),
+                        allocatedPilgrims: allocatedPilgrimsVal,
+                        surplus: getVal(["الفائض"]),
+                        occupancyRate: occupancyRate,
+                        coordX: lat,
+                        coordY: lng,
+                        kmlUrl: kmlUrl,
+                        colIdxAllocated: colIdxAllocated,
+                        colIdxSurplus: colIdxSurplus,
+                        isShared: sheetName.includes("تشاركية"),
+                        isGov: sheetName.includes("جهات حكومية"),
+                        companies: [],
+                        countryNames: [],
+                        companyName: ""
+                    };
+
+                    if (isExternal) {
+                        let cIdx = colMap["اسم الشركة"] !== undefined ? colMap["اسم الشركة"] : colMap["اسمالشركة"];
+                        rowObj.companyName = (cIdx !== undefined && row[cIdx]) ? String(row[cIdx]).trim() : "غير متوفر";
+
+                        if (rowObj.isShared) {
+                            let foundCountries = [];
+                            for (let i = 0; i < headerRow.length; i++) {
+                                let hdr = headerRow[i] ? String(headerRow[i]).trim() : "";
+                                if (hdr.includes("دولة") && !hdr.includes("عدد") && !hdr.includes("أسماء")) {
+                                    let cVal = row[i];
+                                    if (cVal && String(cVal).trim() !== "" && String(cVal).trim() !== "0" && String(cVal).trim() !== "nan") {
+                                        foundCountries.push(String(cVal).trim());
+                                    }
+                                }
+                            }
+                            rowObj.countryNames = foundCountries;
+                        } else {
+                            let cntIdx = colMap["أسماء الدول"] !== undefined ? colMap["أسماء الدول"] : (colMap["أسماءالدول"] !== undefined ? colMap["أسماءالدول"] : (colMap["اسم الدولة"] !== undefined ? colMap["اسم الدولة"] : colMap["اسمالدولة"]));
+                            let cVal = cntIdx !== undefined ? row[cntIdx] : null;
+                            if (cVal && String(cVal).trim() !== "") {
+                                rowObj.countryNames = [String(cVal).trim()];
+                            }
+                        }
+                    } else {
+                        if (rowObj.isShared) {
+                            let maxComp = sheetName.includes("ابراج") ? 2 : 4;
+                            for (let c = 1; c <= maxComp; c++) {
+                                let compNameKey = `اسم الشركة ${c}`;
+                                let compPilgrimsKey = `حجاج شركة ${c}`;
+                                let nIdx = colMap[compNameKey] !== undefined ? colMap[compNameKey] : colMap[`اسم الشركة${c}`];
+                                let pIdx = colMap[compPilgrimsKey] !== undefined ? colMap[compPilgrimsKey] : colMap[`حجاج شركة${c}`];
+                                if (nIdx !== undefined && row[nIdx]) {
+                                    rowObj.companies.push({
+                                        name: String(row[nIdx]).trim(),
+                                        pilgrims: (pIdx !== undefined && row[pIdx]) ? (Number(row[pIdx]) || 0) : 0
+                                    });
+                                }
+                            }
+                        } else if (rowObj.isGov) {
+                            let gIdx = colMap["اسم الجهة الحكومية"] !== undefined ? colMap["اسم الجهة الحكومية"] : colMap["اسمالجهةالحكومية"];
+                            let gName = (gIdx !== undefined && row[gIdx]) ? String(row[gIdx]).trim() : "غير متوفر";
+                            rowObj.companies.push({ name: gName, pilgrims: rowObj.allocatedPilgrims });
+                        } else {
+                            let compIdx = colMap["اسم الشركة"] !== undefined ? colMap["اسم الشركة"] : colMap["اسمالشركة"];
+                            let compName = (compIdx !== undefined && row[compIdx]) ? String(row[compIdx]).trim() : "غير متوفر";
+                            rowObj.companies.push({ name: compName, pilgrims: rowObj.allocatedPilgrims });
+                        }
+                    }
+
+                    rowsData.push(rowObj);
+                }
+
+                if (rowsData.length > 0) {
+                    sheetsData[sheetName] = rowsData;
+                }
+            });
+
+            activateDashboardView();
+        }
+
+        // ================== نظام القراءة والرفع اليدوي لملف الإكسيل ==================
         async function handleFileSelection() {
             if (window.showOpenFilePicker) {
                 try {
@@ -411,34 +658,28 @@
 
         async function processFile(file) {
             updateTitleByFileName(file.name);
-            showToast("جاري قراءة بيانات الشيتات...", "success");
-            
+            showToast("جاري قراءة البيانات...", "success");
             try {
                 const arrayBuffer = await file.arrayBuffer();
                 globalWorkbook = new ExcelJS.Workbook();
                 await globalWorkbook.xlsx.load(arrayBuffer);
-                
-                parseAllSheets();
-                showToast("تم قراءة جميع الشيتات بنجاح!", "success");
+                parseExcelWorkbook();
             } catch (error) { 
                 console.error(error);
                 showToast("حدث خطأ أثناء قراءة الملف.", "error"); 
             }
         }
 
-        function updateTitleByFileName(fileName) {
-            const mainTitleEl = document.getElementById('mainTitle');
-            const subBadgeEl = document.getElementById('subBadge');
-            if (fileName.includes('الخارج')) {
-                mainTitleEl.textContent = 'تخصيص مواقع إسكان حجاج الخارج لموسم حج 1447 هـ';
-                subBadgeEl.textContent = 'حجاج الخارج بمشعر عرفات';
-            } else if (fileName.includes('الداخل')) {
-                mainTitleEl.textContent = 'تخصيص مواقع إسكان حجاج الداخل لموسم حج 1447 هـ';
-                subBadgeEl.textContent = 'حجاج الداخل بمشعر عرفات';
-            }
+        function getCellSafe(row, idx) {
+            if (!idx || idx < 1) return null;
+            try {
+                let val = row.getCell(idx)?.value;
+                if (val && typeof val === 'object' && val.result !== undefined) val = val.result;
+                return val;
+            } catch (e) { return null; }
         }
 
-        function parseAllSheets() {
+        function parseExcelWorkbook() {
             sheetsData = {};
             globalWorkbook.worksheets.forEach(worksheet => {
                 let sheetName = worksheet.name.trim();
@@ -455,18 +696,12 @@
 
                 let colIdxAllocated = colMap["عدد الحجاج المخصص"] || colMap["عددالحجاجالمخصص"];
                 let colIdxSurplus = colMap["الفائض"];
-                let colCoords = colMap["الموقع بالاحداثيات"] || colMap["الموقعبالاحداثيات"];
-                
-                // البحث الشامل عن عمود الـ KML/KMZ وتطبيق شروط الأعمدة (R و N)
+                let colCoords = colMap["XY"] || colMap["xy"] || colMap["الموقع بالاحداثيات"] || colMap["الموقعبالاحداثيات"] || colMap["احداثيات"] || colMap["الإحداثيات"];
                 let colKml = colMap["الموقع kml"] || colMap["الموقعkml"] || colMap["kmz"] || colMap["KMZ"];
-                
-                // تطبيق شروط الأعمدة (R = 18) و (N = 14) حسب طلبك
-                if (sheetName.includes("تشاركية")) {
-                    if (sheetName.includes("مخيمات")) {
-                        colKml = colKml || 18;
-                    } else if (sheetName.includes("ابراج")) {
-                        colKml = colKml || 14;
-                    }
+
+                if (!isExternal && sheetName.includes("تشاركية")) {
+                    if (sheetName.includes("مخيمات")) colKml = colKml || 18;
+                    else if (sheetName.includes("ابراج")) colKml = colKml || 14;
                 }
 
                 worksheet.eachRow((row, rowNumber) => {
@@ -475,55 +710,45 @@
                         for(let key in colMap) {
                             for(let word of keywords) {
                                 if(key.includes(word.replace(/\s+/g, ''))) {
-                                    let val = row.getCell(colMap[key]).value;
-                                    if (val && typeof val === 'object' && val.result !== undefined) val = val.result;
-                                    return val;
+                                    return getCellSafe(row, colMap[key]) || 0;
                                 }
                             }
                         } return 0;
                     };
 
-                    let camp = row.getCell(colMap["اسم المخيم"] || colMap["اسمالمخيم"])?.value;
+                    let camp = getCellSafe(row, colMap["اسم المخيم"] || colMap["اسمالمخيم"]);
                     if(!camp) return;
 
-                    let rawCoords = colCoords ? row.getCell(colCoords).value : null;
-                    if (rawCoords && typeof rawCoords === 'object' && rawCoords.result !== undefined) rawCoords = rawCoords.result;
-                    
-                    let lat = null; 
-                    let lng = null;
-                    
+                    let rawCoords = getCellSafe(row, colCoords);
+                    let lat = null, lng = null;
                     if (rawCoords) {
                         let strCoords = rawCoords.toString().trim();
                         let parts = strCoords.replace(/[;/]/g, ',').split(',').map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
-                        if (parts.length < 2) {
-                            parts = strCoords.split(/\s+/).map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
-                        }
+                        if (parts.length < 2) parts = strCoords.split(/\s+/).map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
                         if (parts.length >= 2) {
-                            if (parts[0] > 30) { 
-                                lng = parts[0]; lat = parts[1]; 
-                            } else { 
-                                lat = parts[0]; lng = parts[1]; 
-                            }
+                            if (parts[0] > 30) { lng = parts[0]; lat = parts[1]; }
+                            else { lat = parts[0]; lng = parts[1]; }
                         }
                     }
 
-                    // استخراج الرابط المباشر بذكاء
-                    let rawKml = colKml ? row.getCell(colKml).value : null;
+                    let rawKml = getCellSafe(row, colKml);
                     let kmlUrl = null;
                     if (rawKml) {
                         let rawStr = '';
-                        if (typeof rawKml === 'string') {
-                            rawStr = rawKml;
-                        } else if (rawKml.richText) {
-                            rawStr = rawKml.richText.map(rt => rt.text).join('');
-                        } else if (rawKml.hyperlink) {
-                            rawStr = rawKml.hyperlink;
-                        } else if (rawKml.text) {
-                            rawStr = rawKml.text;
-                        } else {
-                            rawStr = String(rawKml);
-                        }
+                        if (typeof rawKml === 'string') rawStr = rawKml;
+                        else if (rawKml.richText) rawStr = rawKml.richText.map(rt => rt.text).join('');
+                        else if (rawKml.hyperlink) rawStr = rawKml.hyperlink;
+                        else if (rawKml.text) rawStr = rawKml.text;
+                        else rawStr = String(rawKml);
                         kmlUrl = rawStr.trim();
+                    }
+
+                    let tentAreaVal = getValue(["مساحة الخيام وفق التصميم"]);
+                    let allocatedPilgrimsVal = getValue(["عدد الحجاج المخصص"]);
+
+                    let occupancyRate = 0;
+                    if (isExternal) {
+                        occupancyRate = (allocatedPilgrimsVal > 0) ? (tentAreaVal / allocatedPilgrimsVal) : 0;
                     }
 
                     let rowObj = {
@@ -531,54 +756,68 @@
                         campName: camp.toString().trim(),
                         totalArea: getValue(["مساحة المخيم الكلية"]),
                         housingArea: getValue(["المساحة المخصصه للاسكان", "المساحة المخصصة للإسكان"]),
-                        tentArea: getValue(["مساحة الخيام وفق التصميم"]), 
+                        tentArea: tentAreaVal, 
                         pilgrimsCount: getValue(["عدد الحجاج"]),
-                        companiesCount: getValue(["عدد الشركات", "عدد الجهات"]),
-                        allocatedPilgrims: getValue(["عدد الحجاج المخصص"]),
+                        companiesCount: getValue(["عدد الشركات", "عدد الجهات", "عدد الدول"]),
+                        allocatedPilgrims: allocatedPilgrimsVal,
                         surplus: getValue(["الفائض"]),
+                        occupancyRate: occupancyRate,
                         coordX: lat,
                         coordY: lng,
-                        kmlUrl: kmlUrl, // يحتوي الآن على الرابط الذي وفرته
+                        kmlUrl: kmlUrl,
                         colIdxAllocated: colIdxAllocated,
                         colIdxSurplus: colIdxSurplus,
                         isShared: sheetName.includes("تشاركية"),
                         isGov: sheetName.includes("جهات حكومية"),
-                        companies: []
+                        companies: [],
+                        countryNames: [],
+                        companyName: ""
                     };
 
-                    if (rowObj.isShared) {
-                        let maxComp = sheetName.includes("ابراج") ? 2 : 4;
-                        for (let c = 1; c <= maxComp; c++) {
-                            let compNameKey = `اسم الشركة ${c}`;
-                            let compPilgrimsKey = `حجاج شركة ${c}`;
-                            let cName = row.getCell(colMap[compNameKey] || colMap[`اسم الشركة${c}`])?.value;
-                            let cPilgrims = row.getCell(colMap[compPilgrimsKey] || colMap[`حجاج شركة${c}`])?.value;
-                            if (cName) {
-                                if (cPilgrims && typeof cPilgrims === 'object' && cPilgrims.result !== undefined) cPilgrims = cPilgrims.result;
-                                rowObj.companies.push({
-                                    name: cName.toString().trim(),
-                                    pilgrims: Number(cPilgrims) || 0,
-                                    colIdxName: colMap[compNameKey] || colMap[`اسم الشركة${c}`],
-                                    colIdxPilgrims: colMap[compPilgrimsKey] || colMap[`حجاج شركة${c}`]
-                                });
+                    if (isExternal) {
+                        let compVal = getCellSafe(row, colMap["اسم الشركة"] || colMap["اسمالشركة"]) || "غير متوفر";
+                        rowObj.companyName = compVal.toString().trim();
+
+                        if (rowObj.isShared) {
+                            let foundCountries = [];
+                            for (let i = 1; i < headerRow.length; i++) {
+                                let hdr = headerRow[i] ? headerRow[i].toString().trim() : "";
+                                if (hdr.includes("دولة") && !hdr.includes("عدد") && !hdr.includes("أسماء")) {
+                                    let cVal = getCellSafe(row, i);
+                                    if (cVal && cVal.toString().trim() !== "" && cVal.toString().trim() !== "0" && cVal.toString().trim() !== "nan") {
+                                        foundCountries.push(cVal.toString().trim());
+                                    }
+                                }
+                            }
+                            rowObj.countryNames = foundCountries;
+                        } else {
+                            let cVal = getCellSafe(row, colMap["أسماء الدول"] || colMap["أسماءالدول"] || colMap["اسم الدولة"] || colMap["اسمالدولة"]);
+                            if (cVal && cVal.toString().trim() !== "") {
+                                rowObj.countryNames = [cVal.toString().trim()];
                             }
                         }
-                    } else if (rowObj.isGov) {
-                        let gName = row.getCell(colMap["اسم الجهة الحكومية"] || colMap["اسمالجهةالحكومية"])?.value || "غير متوفر";
-                        rowObj.companies.push({
-                            name: gName.toString().trim(),
-                            pilgrims: rowObj.allocatedPilgrims,
-                            colIdxName: colMap["اسم الجهة الحكومية"] || colMap["اسمالجهةالحكومية"],
-                            colIdxPilgrims: colIdxAllocated
-                        });
                     } else {
-                        let compName = row.getCell(colMap["اسم الشركة"] || colMap["اسمالشركة"])?.value || "غير متوفر";
-                        rowObj.companies.push({
-                            name: compName.toString().trim(),
-                            pilgrims: rowObj.allocatedPilgrims,
-                            colIdxName: colMap["اسم الشركة"] || colMap["اسمالشركة"],
-                            colIdxPilgrims: colIdxAllocated
-                        });
+                        if (rowObj.isShared) {
+                            let maxComp = sheetName.includes("ابراج") ? 2 : 4;
+                            for (let c = 1; c <= maxComp; c++) {
+                                let compNameKey = `اسم الشركة ${c}`;
+                                let compPilgrimsKey = `حجاج شركة ${c}`;
+                                let cName = getCellSafe(row, colMap[compNameKey] || colMap[`اسم الشركة${c}`]);
+                                let cPilgrims = getCellSafe(row, colMap[compPilgrimsKey] || colMap[`حجاج شركة${c}`]);
+                                if (cName) {
+                                    rowObj.companies.push({
+                                        name: cName.toString().trim(),
+                                        pilgrims: Number(cPilgrims) || 0
+                                    });
+                                }
+                            }
+                        } else if (rowObj.isGov) {
+                            let gName = getCellSafe(row, colMap["اسم الجهة الحكومية"] || colMap["اسمالجهةالحكومية"]) || "غير متوفر";
+                            rowObj.companies.push({ name: gName.toString().trim(), pilgrims: rowObj.allocatedPilgrims });
+                        } else {
+                            let compName = getCellSafe(row, colMap["اسم الشركة"] || colMap["اسمالشركة"]) || "غير متوفر";
+                            rowObj.companies.push({ name: compName.toString().trim(), pilgrims: rowObj.allocatedPilgrims });
+                        }
                     }
 
                     rowsData.push(rowObj);
@@ -589,14 +828,34 @@
                 }
             });
 
+            activateDashboardView();
+        }
+
+        // ================== التفعيل المشترك وعرض لوحة التحكم ==================
+        function activateDashboardView() {
             const sheetNames = Object.keys(sheetsData);
             if (sheetNames.length > 0) {
                 buildSheetsNavbar(sheetNames);
                 switchSheet(sheetNames[0]);
-                document.getElementById('uploadSection').classList.add('hidden');
+                document.getElementById('selectionSection').classList.add('hidden');
                 document.getElementById('dashboardSection').classList.remove('hidden');
+                document.getElementById('uploadNewBtn').classList.remove('hidden');
+                showToast("تم تحميل البيانات بنجاح!", "success");
             } else {
                 showToast("لم يتم العثور على بيانات صالحة في الشيتات.", "error");
+            }
+        }
+
+        function updateTitleByFileName(fileName) {
+            const mainTitleEl = document.getElementById('mainTitle');
+            const subBadgeEl = document.getElementById('subBadge');
+            isExternal = fileName.includes('الخارج');
+            if (isExternal) {
+                mainTitleEl.textContent = 'تخصيص مواقع إسكان حجاج الخارج لموسم حج 1447 هـ';
+                subBadgeEl.textContent = 'حجاج الخارج بمشعر عرفات';
+            } else {
+                mainTitleEl.textContent = 'تخصيص مواقع إسكان حجاج الداخل لموسم حج 1447 هـ';
+                subBadgeEl.textContent = 'حجاج الداخل بمشعر عرفات';
             }
         }
 
@@ -627,7 +886,10 @@
 
             const cardCountTitle = document.getElementById('cardCountTitle');
             const labelSelectCamp = document.getElementById('labelSelectCamp');
-            if (sheetName.includes("جهات حكومية")) {
+            if (isExternal) {
+                cardCountTitle.textContent = "عدد الدول";
+                labelSelectCamp.textContent = "البيانات المساحية للمخيم :";
+            } else if (sheetName.includes("جهات حكومية")) {
                 cardCountTitle.textContent = "عدد الجهات";
                 labelSelectCamp.textContent = "البيانات المساحية للجهة :";
             } else {
@@ -668,10 +930,29 @@
             currentCampData = dashboardData.find(d => d.campName === campName);
             
             document.getElementById("val-totalArea").textContent = formatNumber(currentCampData.totalArea);
-            document.getElementById("val-housingArea").textContent = formatNumber(currentCampData.housingArea);
+            
+            const titleCard2 = document.getElementById("title-card2");
+            const valHousingEl = document.getElementById("val-housingArea");
+            const unitHousingEl = document.getElementById("unit-housingArea");
+            
+            if (isExternal) {
+                titleCard2.textContent = currentCampData.isShared ? "الدول المخصصة" : "الدولة المخصصة";
+                let namesStr = (currentCampData.countryNames && currentCampData.countryNames.length > 0) 
+                    ? currentCampData.countryNames.join(' / ') 
+                    : "غير متوفر";
+                valHousingEl.textContent = namesStr;
+                valHousingEl.className = "text-2xl font-black text-brand-green dark:text-white px-2 text-center leading-relaxed";
+                unitHousingEl.style.display = 'none';
+            } else {
+                titleCard2.textContent = "المساحة المخصصة للإسكان";
+                valHousingEl.textContent = formatNumber(currentCampData.housingArea);
+                valHousingEl.className = "text-4xl font-black text-brand-green dark:text-white";
+                unitHousingEl.style.display = 'inline';
+            }
+
             document.getElementById("val-tentArea").textContent = formatNumber(currentCampData.tentArea);
             document.getElementById("val-pilgrims").textContent = formatNumber(currentCampData.pilgrimsCount);
-            document.getElementById("val-companiesCount").textContent = formatNumber(currentCampData.companiesCount || currentCampData.companies.length);
+            document.getElementById("val-companiesCount").textContent = formatNumber(currentCampData.companiesCount || (isExternal ? currentCampData.countryNames.length : currentCampData.companies.length));
             document.getElementById("val-allocated-input").value = currentCampData.allocatedPilgrims;
 
             renderCompanyDisplaySlot();
@@ -679,7 +960,6 @@
             renderMap(currentCampData.coordX, currentCampData.coordY, currentCampData.campName, currentCampData.kmlUrl);
         }
 
-        // --- دالة رسم الخريطة المتجاوبة من خلال رابط Github المباشر ---
         function renderMap(lat, lng, campName, kmlUrl) {
             document.getElementById('coordsText').textContent = campName;
             
@@ -687,7 +967,6 @@
             const fallbackContainer = document.getElementById('mapFallback');
             const btnOpenMaps = document.getElementById('btnOpenGoogleMaps');
 
-            // 1. تحديث زر الفتح على جوجل ماب بالإحداثيات
             if (lat !== null && lng !== null) {
                 btnOpenMaps.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
                 btnOpenMaps.classList.remove('hidden');
@@ -695,7 +974,6 @@
                 btnOpenMaps.classList.add('hidden');
             }
 
-            // 2. التحقق من وجود بيانات للخريطة
             if (!kmlUrl && lat === null && lng === null) {
                 mapContainer.style.display = 'none';
                 fallbackContainer.style.display = 'flex';
@@ -707,17 +985,13 @@
             mapContainer.innerHTML = ''; 
 
             let finalUrl = null;
-
-            // 3. تأمين وقراءة الرابط اللي جاي من الإكسيل (مهما كان شكله)
             if (kmlUrl && (kmlUrl.startsWith('http://') || kmlUrl.startsWith('https://'))) {
                 finalUrl = kmlUrl;
             }
 
-            // 4. رسم الخريطة عن طريق إنشاء Iframe يأخذ 100% من المساحة المتاحة
             if (finalUrl) {
                 mapContainer.innerHTML = `<iframe src="${finalUrl}" class="w-full h-full border-0" style="width: 100%; height: 100%; min-height: 400px;" loading="lazy" allowfullscreen></iframe>`;
             } else if (lat !== null && lng !== null) {
-                // بديل: رسم خريطة جوجل ماب الافتراضية للنقطة
                 mapContainer.innerHTML = `<iframe src="https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed" class="w-full h-full border-0" style="width: 100%; height: 100%; min-height: 400px;" loading="lazy" allowfullscreen></iframe>`;
             } else {
                 mapContainer.style.display = 'none';
@@ -729,28 +1003,38 @@
             const slot = document.getElementById('companyDisplaySlot');
             slot.innerHTML = '';
 
-            if (currentCampData.isShared) {
-                currentCampData.companies.forEach((comp, idx) => {
-                    let box = document.createElement('div');
-                    box.className = "bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl p-2 flex flex-col items-center text-center shadow-sm flex-grow justify-center";
-                    box.innerHTML = `
-                        <div class="text-brand-green dark:text-brand-gold font-bold text-xs leading-tight mb-0.5">${comp.name}</div>
-                        <div class="text-brand-gold font-black text-base flex gap-1 items-baseline">
-                            <span>${formatNumber(comp.pilgrims)}</span> <span class="text-[10px]">حاج</span>
-                        </div>
-                    `;
-                    slot.appendChild(box);
-                });
-            } else {
-                let comp = currentCampData.companies[0] || { name: "غير متوفر", pilgrims: currentCampData.allocatedPilgrims };
+            if (isExternal) {
+                let compName = currentCampData.companyName || "غير متوفر";
                 slot.innerHTML = `
-                    <div class="p-4 text-center flex flex-col justify-center items-center flex-grow gap-3 bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl shadow-sm">
-                        <h3 class="text-lg font-black text-brand-green dark:text-white leading-snug">${comp.name}</h3>
-                        <div class="border-2 border-brand-gold text-brand-gold px-3 py-1 rounded-xl font-black text-lg bg-brand-goldLight dark:bg-slate-700 flex gap-1 items-baseline">
-                            <span>${formatNumber(comp.pilgrims)}</span> <span class="text-xs">حاج</span>
-                        </div>
+                    <div class="p-4 text-center flex flex-col justify-center items-center flex-grow gap-2 bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl shadow-sm">
+                        <div class="text-brand-gold font-bold text-xs">اسم الشركة</div>
+                        <h3 class="text-xl font-black text-brand-green dark:text-white leading-snug">${compName}</h3>
                     </div>
                 `;
+            } else {
+                if (currentCampData.isShared) {
+                    currentCampData.companies.forEach((comp, idx) => {
+                        let box = document.createElement('div');
+                        box.className = "bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl p-2 flex flex-col items-center text-center shadow-sm flex-grow justify-center";
+                        box.innerHTML = `
+                            <div class="text-brand-green dark:text-brand-gold font-bold text-xs leading-tight mb-0.5">${comp.name}</div>
+                            <div class="text-brand-gold font-black text-base flex gap-1 items-baseline">
+                                <span>${formatNumber(comp.pilgrims)}</span> <span class="text-[10px]">حاج</span>
+                            </div>
+                        `;
+                        slot.appendChild(box);
+                    });
+                } else {
+                    let comp = currentCampData.companies[0] || { name: "غير متوفر", pilgrims: currentCampData.allocatedPilgrims };
+                    slot.innerHTML = `
+                        <div class="p-4 text-center flex flex-col justify-center items-center flex-grow gap-3 bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl shadow-sm">
+                            <h3 class="text-lg font-black text-brand-green dark:text-white leading-snug">${comp.name}</h3>
+                            <div class="border-2 border-brand-gold text-brand-gold px-3 py-1 rounded-xl font-black text-lg bg-brand-goldLight dark:bg-slate-700 flex gap-1 items-baseline">
+                                <span>${formatNumber(comp.pilgrims)}</span> <span class="text-xs">حاج</span>
+                            </div>
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -761,17 +1045,28 @@
             let newSurplus = Math.max(0, total - newVal);
             currentCampData.allocatedPilgrims = newVal;
             currentCampData.surplus = newSurplus;
-            if (currentCampData.companies.length > 0) {
-                currentCampData.companies[0].pilgrims = newVal;
+            
+            if (isExternal) {
+                currentCampData.occupancyRate = (newVal > 0) ? (currentCampData.tentArea / newVal) : 0;
+            } else {
+                if (currentCampData.companies.length > 0) {
+                    currentCampData.companies[0].pilgrims = newVal;
+                }
+                renderCompanyDisplaySlot();
             }
-            renderCompanyDisplaySlot();
+
             updateChart();
-            document.getElementById('saveChangesBtn').classList.remove('hidden');
+            if (globalWorkbook) {
+                document.getElementById('saveChangesBtn').classList.remove('hidden');
+            }
         }
 
         async function saveDataToFile() {
-            if(!globalWorkbook || !currentCampData) return;
-            showToast("جاري حفظ التغيرات على الشيت...", "success");
+            if(!globalWorkbook || !currentCampData) {
+                showToast("هذا الخيار يعمل عند اختيار الملف يدوياً لحفظ التغيرات كملف جديد", "error");
+                return;
+            }
+            showToast("جاري حفظ التغيرات...", "success");
             
             const ws = globalWorkbook.getWorksheet(currentSheetName);
             const row = ws.getRow(currentCampData.rowNumber);
@@ -782,42 +1077,56 @@
             if (currentCampData.colIdxSurplus) {
                 row.getCell(currentCampData.colIdxSurplus).value = currentCampData.surplus;
             }
-            if (currentCampData.isShared) {
-                currentCampData.companies.forEach(comp => {
-                    if (comp.colIdxPilgrims) {
-                        row.getCell(comp.colIdxPilgrims).value = comp.pilgrims;
-                    }
-                });
-            }
             row.commit();
 
             try {
                 const buffer = await globalWorkbook.xlsx.writeBuffer();
-                
-                if (fileHandle && fileHandle.createWritable) {
-                    try {
-                        const writable = await fileHandle.createWritable();
-                        await writable.write(buffer);
-                        await writable.close();
-                        showToast("تم تحديث الملف الأصلي بنجاح.");
-                        document.getElementById('saveChangesBtn').classList.add('hidden');
-                        return;
-                    } catch (err) {
-                        console.error(err);
-                    }
-                }
-                
                 const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
                 const link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);
-                link.download = "محدث_بيانات_المخيمات.xlsx";
+                link.download = isExternal ? "محدث_بيانات_حجاج_الخارج.xlsx" : "محدث_بيانات_حجاج_الداخل.xlsx";
                 link.click();
-                showToast("تم تحميل النسخة المعدلة بنجاح.");
+                showToast("تم تنزيل النسخة المعدلة بنجاح.");
                 document.getElementById('saveChangesBtn').classList.add('hidden');
             } catch (err) { showToast("حدث خطأ أثناء محاولة الحفظ.", "error"); }
         }
 
         function formatNumber(num) { return Number(num).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            if(doughnutChartInstance && currentCampData) {
+                updateChart();
+            }
+        }
+
+        const centerTextPlugin = {
+            id: 'centerText',
+            afterDraw: (chart) => {
+                if (chart.config.options.elements && chart.config.options.elements.center) {
+                    const ctx = chart.ctx;
+                    const centerConfig = chart.config.options.elements.center;
+                    const meta = chart.getDatasetMeta(0);
+                    if (meta.data && meta.data.length > 0) {
+                        const centerX = meta.data[0].x;
+                        const centerY = meta.data[0].y;
+                        const isDark = document.documentElement.classList.contains('dark') && !document.getElementById('printableDashboard').classList.contains('exporting-mode');
+                        
+                        ctx.save();
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.font = 'bold 14px Tajawal';
+                        ctx.fillStyle = '#9ca3af';
+                        ctx.fillText(isExternal ? 'نسبة التسكين' : 'الإجمالي', centerX, centerY - 15);
+                        ctx.font = '900 28px Tajawal';
+                        ctx.fillStyle = isDark ? '#ffffff' : '#125243';
+                        ctx.fillText(centerConfig.text, centerX, centerY + 15);
+                        ctx.restore();
+                    }
+                }
+            }
+        };
+        Chart.register(centerTextPlugin);
 
         function updateChart(isExport = false) {
             const ctx = document.getElementById('doughnutCanvas').getContext('2d');
@@ -826,50 +1135,95 @@
             let labels = [];
             let dataValues = [];
             let bgColors = ['#c79a55', '#125243', '#196d5a', '#d97706', '#0284c7'];
-
-            let total = currentCampData.pilgrimsCount;
-
-            if (currentCampData.isShared && currentCampData.companies.length > 0) {
-                currentCampData.companies.forEach((comp, idx) => {
-                    let pct = total > 0 ? Math.round((comp.pilgrims / total) * 100) : 0;
-                    labels.push(`${comp.name} (${pct}%)`);
-                    dataValues.push(comp.pilgrims);
-                });
-            } else {
-                let allocated = currentCampData.allocatedPilgrims;
-                let allocatedPct = total > 0 ? Math.round((allocated / total) * 100) : 0;
-                labels.push(`المخصص (${allocatedPct}%)`);
-                dataValues.push(allocated);
-            }
-
-            let surplus = currentCampData.surplus;
-            let surplusPct = total > 0 ? Math.round((surplus / total) * 100) : 0;
-            labels.push(`الفائض (${surplusPct}%)`);
-            dataValues.push(surplus);
-
             const isDark = document.documentElement.classList.contains('dark') && !isExport && !document.getElementById('printableDashboard').classList.contains('exporting-mode');
 
-            doughnutChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: labels, datasets: [{ data: dataValues, backgroundColor: bgColors.slice(0, dataValues.length), borderWidth: 0, hoverOffset: 0 }] },
-                options: {
-                    responsive: true, maintainAspectRatio: false, cutout: '75%', 
-                    animation: isExport ? false : { duration: 600 },
-                    elements: { center: { text: formatNumber(total) } },
-                    layout: { padding: { bottom: 15 } },
-                    plugins: {
-                        legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 12, weight: 'bold' }, color: isDark ? '#ffffff' : '#125243', usePointStyle: true, padding: 15 } },
-                        tooltip: { rtl: true, titleFont: { family: 'Tajawal', size: 14 }, bodyFont: { family: 'Tajawal', size: 14, weight: 'bold' }, displayColors: false }
+            if (isExternal) {
+                let rateVal = (currentCampData.allocatedPilgrims > 0) 
+                    ? (currentCampData.tentArea / currentCampData.allocatedPilgrims) 
+                    : 0;
+                let dispText = rateVal.toFixed(2);
+                labels = [`نسبة التسكين (${dispText})`];
+                dataValues = [rateVal];
+
+                doughnutChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { 
+                        labels: labels, 
+                        datasets: [{ 
+                            data: dataValues, 
+                            backgroundColor: ['#c79a55'], 
+                            borderWidth: 0, 
+                            hoverOffset: 0 
+                        }] 
+                    },
+                    options: {
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        cutout: '75%', 
+                        animation: isExport ? false : { duration: 600 },
+                        elements: { center: { text: dispText } },
+                        layout: { padding: { bottom: 15 } },
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 12, weight: 'bold' }, color: isDark ? '#ffffff' : '#125243', usePointStyle: true, padding: 15 } },
+                            tooltip: { rtl: true, titleFont: { family: 'Tajawal', size: 14 }, bodyFont: { family: 'Tajawal', size: 14, weight: 'bold' }, displayColors: false }
+                        }
                     }
+                });
+            } else {
+                let total = currentCampData.pilgrimsCount;
+                if (currentCampData.isShared && currentCampData.companies.length > 0) {
+                    currentCampData.companies.forEach((comp, idx) => {
+                        let pct = total > 0 ? Math.round((comp.pilgrims / total) * 100) : 0;
+                        labels.push(`${comp.name} (${pct}%)`);
+                        dataValues.push(comp.pilgrims);
+                    });
+                } else {
+                    let allocated = currentCampData.allocatedPilgrims;
+                    let allocatedPct = total > 0 ? Math.round((allocated / total) * 100) : 0;
+                    labels.push(`المخصص (${allocatedPct}%)`);
+                    dataValues.push(allocated);
                 }
-            });
+
+                let surplus = currentCampData.surplus;
+                let surplusPct = total > 0 ? Math.round((surplus / total) * 100) : 0;
+                labels.push(`الفائض (${surplusPct}%)`);
+                dataValues.push(surplus);
+
+                doughnutChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels: labels, datasets: [{ data: dataValues, backgroundColor: bgColors.slice(0, dataValues.length), borderWidth: 0, hoverOffset: 0 }] },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '75%', 
+                        animation: isExport ? false : { duration: 600 },
+                        elements: { center: { text: formatNumber(total) } },
+                        layout: { padding: { bottom: 15 } },
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 12, weight: 'bold' }, color: isDark ? '#ffffff' : '#125243', usePointStyle: true, padding: 15 } },
+                            tooltip: { rtl: true, titleFont: { family: 'Tajawal', size: 14 }, bodyFont: { family: 'Tajawal', size: 14, weight: 'bold' }, displayColors: false }
+                        }
+                    }
+                });
+            }
         }
 
-        function resetApp() { location.reload(); }
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if(type === 'success' || type === 'error') { container.innerHTML = ''; }
+            
+            const toast = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-red-500' : 'bg-brand-green';
+            toast.className = `flex items-center p-4 w-full text-white ${bgColor} rounded-xl shadow-2xl transition-all z-[999]`;
+            toast.innerHTML = `<div class="font-bold flex-grow text-center">${message}</div>`;
+            container.appendChild(toast);
+            
+            if(!message.includes("جاري")) {
+                setTimeout(() => { if(toast.parentElement) toast.remove(); }, 4000);
+            }
+        }
 
         async function prepareForExport() {
             document.getElementById('toastContainer').innerHTML = '';
-            showToast("جاري التقاط الصورة وتصدير التقرير...", "success");
+            showToast("جاري التصدير...", "success");
             const element = document.getElementById('printableDashboard');
             
             const wasDark = document.documentElement.classList.contains('dark');
