@@ -163,28 +163,58 @@
         </div>
 
         <!-- 2. شاشة اختيار المنصة (حجاج الداخل / الخارج) -->
-        <div id="selectionSection" class="hidden glass-card bg-white dark:bg-brand-cardDark rounded-3xl p-12 text-center max-w-4xl mx-auto mt-10">
-            <h2 class="text-3xl font-black text-brand-green dark:text-brand-gold mb-3">اختر المنصة المساحية</h2>
-            <p class="text-gray-500 dark:text-gray-400 mb-10 font-medium">قم باختيار البيانات المطلوب استعراضها ليتم عرضها تلقائياً</p>
+        <div id="selectionSection" class="hidden glass-card bg-white dark:bg-brand-cardDark rounded-3xl p-8 md:p-12 text-center max-w-5xl mx-auto mt-6">
+            <h2 class="text-3xl md:text-4xl font-black text-brand-green dark:text-brand-gold mb-3">تخصيص مواقع إسكان الحجاج لموسم حج 1447 هـ</h2>
+            
+            <!-- شريط معلومات إجمالي المخيمات والحجاج -->
+            <div class="inline-flex flex-wrap justify-center items-center gap-6 bg-brand-goldLight dark:bg-slate-800 border-2 border-brand-gold/40 px-6 py-2.5 rounded-2xl text-lg font-black text-brand-green dark:text-brand-gold mb-8 shadow-sm">
+                <span class="dark:text-white">إجمالي عدد المخيمات الكلي: <span class="text-brand-gold font-black">646</span> مخيم</span>
+                <span class="hidden md:inline text-gray-300 dark:text-slate-600">|</span>
+                <span class="dark:text-white">إجمالي عدد الحجاج الكلي: <span class="text-brand-gold font-black">1,744,698</span> حاج</span>
+            </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- زر حجاج الداخل -->
-       <button onclick="loadGoogleSheet('internal')" class="group p-8 rounded-3xl border-2 border-brand-green/30 hover:border-brand-green bg-brand-goldLight dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 transition-all shadow-md hover:shadow-2xl flex flex-col items-center justify-center gap-4">
-                    <div class="w-24 h-24 bg-brand-green text-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-<svg id="fi_7351096" enable-background="new 0 0 74 74" height="512" viewBox="0 0 74 74" width="512" xmlns="http://www.w3.org/2000/svg"><path d="m50.83 33.25c-.45-2.38-.93-3.09-1.26-3.4-.16-.16-1.38-5.02-7.99-6.17-.43-.07-.85.12-1.14.43-.57-.09-1.05-.44-1.26-.99-.12-.31-.26-.76-.41-1.63 2.36-1.29 4.01-4.18 4.04-7.54.72-3.01.53-5.13-.58-6.28-.61-.64-1.39-.85-2-.88-.65-1.19-2.06-1.79-4.17-1.79-3.05 0-5.18.86-6.34 2.56-1.68 2.46-.65 5.77-.41 6.45.05 3.34 1.7 6.21 4.04 7.48-.14.87-.28 1.32-.41 1.64-.23.61-.84 1.02-1.5 1.02-4.59 0-8.32 3.73-8.32 8.32v8.77c0 1.93 1.56 3.49 3.48 3.49.08 0 .15-.02.22-.02v6.17c0 .68.26 1.32.69 1.82v7.91c0 .81.39 1.52 1 1.98v3.17c0 1.79 1.46 3.24 3.24 3.24 1.79 0 3.25-1.45 3.25-3.24v-2.14c.67-.21 1.33-.45 1.97-.72v2.86c0 1.79 1.46 3.24 3.24 3.24 1.79 0 3.25-1.45 3.25-3.24v-6.2c.02-.02.05-.04.08-.06.6-.53.95-1.3.95-2.12v-8.5c.43-.49.69-1.14.69-1.83v-2.35c.11.01.23.03.35.03 1.92 0 3.48-1.56 3.48-3.49v-4.07c.32-.3.62-.58.86-.83.81-.81 1.16-1.97.96-3.09zm-20.02-19.38s0 0 0-.01c0-1.56.81-2.65 1.54-2.65.4 0 .67.06.85.19.86.64 1.63.97 2.43 1.02.29.01.57.01.85 0 1.04-.07 1.89-.62 2.44-1.02.18-.13.44-.19.84-.19.73 0 1.55 1.09 1.55 2.65v.01c0 3.76-2.36 6.83-5.25 6.83-2.9 0-5.25-3.07-5.25-6.83zm2.69 51.89c0 .96-.78 1.74-1.75 1.74-.96 0-1.74-.78-1.74-1.74v-2.64c.02 0 .04.01.07.01.81-.06 1.62-.16 2.4-.28.13.18.28.35.47.49.17.13.36.22.55.29zm-3.46-34.74c-.11-.29-.38-.5-.7-.5-.42 0-.75.33-.75.75v9.97c0 1.1-.89 1.99-1.99 1.99-1.09 0-1.98-.89-1.98-1.99v-8.77c0-3.76 3.06-6.82 6.82-6.82 1.28 0 2.45-.8 2.9-1.98.18-.46.32-.98.44-1.63.41.1.84.16 1.28.16s.87-.06 1.29-.16c.12.65.25 1.17.43 1.63.34.86 1.03 1.5 1.87 1.8-.97 1.56-3.55 4.41-9.61 5.55zm11.92 34.74c0 .96-.78 1.74-1.75 1.74-.96 0-1.74-.78-1.74-1.74v-3.5c1.37-.58 2.52-1.1 3.49-1.66zm5.55-24.52c0 1.1-.89 1.99-1.99 1.99-.11 0-.23-.01-.34-.03v-3.11c.83-.49 1.62-1.06 2.33-1.63z"></path></svg>                    
+                <!-- كارت حجاج الداخل -->
+                <div class="p-6 md:p-8 rounded-3xl border-2 border-brand-green/30 hover:border-brand-green bg-brand-goldLight dark:bg-slate-800 transition-all shadow-md hover:shadow-2xl flex flex-col items-center justify-between gap-6">
+                    <button onclick="loadGoogleSheet('internal')" class="w-full group flex flex-col items-center justify-center gap-4">
+                        <div class="w-24 h-24 bg-brand-green text-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+<svg id="fi_4448524" height="512" viewBox="0 0 48 48" width="512" xmlns="http://www.w3.org/2000/svg" data-name="Layer 16"><path d="m36.7 24.134a28.161 28.161 0 0 0 -8.53-3.67 13.463 13.463 0 0 0 4.83-9.75 8.871 8.871 0 0 0 -9-8.714 8.871 8.871 0 0 0 -9 8.714 13.463 13.463 0 0 0 4.827 9.749 28.161 28.161 0 0 0 -8.53 3.67 6.806 6.806 0 0 0 -3.297 5.867v15a1 1 0 0 0 1 1h30a1 1 0 0 0 1-1v-14.922a6.967 6.967 0 0 0 -3.3-5.944zm-12.7-20.134a7.023 7.023 0 0 1 6.4 4h-12.8a7.023 7.023 0 0 1 6.4-4zm-7 6.714a6.472 6.472 0 0 1 .041-.714h13.918a6.472 6.472 0 0 1 .041.714c0 3.667-3.136 9.286-7 9.286s-7-5.619-7-9.286zm-7 19.286a4.819 4.819 0 0 1 2.294-4.128c.661 1.428 2.817 5.528 6.306 7.045a1 1 0 0 0 .8-1.834c-2.968-1.29-4.9-5.2-5.364-6.214q.8-.434 1.537-.786c1.536 1.942 7.61 8.989 16.428 11.652v8.265h-22.001zm28 14h-4v-11a1 1 0 0 0 -2 0v.64c-7.34-2.432-12.7-8.211-14.516-10.384a17.267 17.267 0 0 1 6.516-1.256c2.634 0 6.081.457 11.666 3.844a4.957 4.957 0 0 1 2.334 4.234z"></path></svg>                        </div>
+                        <span class="text-3xl font-black text-brand-green dark:text-white">حجاج الداخل</span>
+                        <span class="text-sm font-bold text-gray-600 dark:text-gray-200">بيانات التخصيص والمساحات لحجاج الداخل</span>
+                    </button>
+                    <!-- شارتات النسبة للداخل -->
+                    <div class="grid grid-cols-2 gap-4 w-full border-t border-gray-200 dark:border-slate-700 pt-4">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="h-28 w-28 relative"><canvas id="selIntCampsCanvas"></canvas></div>
+                            <span class="text-xs font-bold text-gray-700 dark:text-gray-100 mt-2">نسبة المخيمات من الإجمالي</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="h-28 w-28 relative"><canvas id="selIntPilgrimsCanvas"></canvas></div>
+                            <span class="text-xs font-bold text-gray-700 dark:text-gray-100 mt-2">نسبة الحجاج من الإجمالي</span>
+                        </div>
                     </div>
-                    <span class="text-3xl font-black text-brand-green dark:text-white">حجاج الداخل</span>
-                    <span class="text-sm font-bold text-gray-500 dark:text-gray-400">بيانات التخصيص والمساحات لحجاج الداخل</span>
-                </button>
+                </div>
 
-                <!-- زر حجاج الخارج -->
-            <button onclick="loadGoogleSheet('external')" class="group p-8 rounded-3xl border-2 border-brand-gold/30 hover:border-brand-gold bg-brand-goldLight dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 transition-all shadow-md hover:shadow-2xl flex flex-col items-center justify-center gap-4">
-                    <div class="w-24 h-24 bg-brand-gold text-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                       <svg id="fi_7351096" enable-background="new 0 0 74 74" height="512" viewBox="0 0 74 74" width="512" xmlns="http://www.w3.org/2000/svg"><path d="m50.83 33.25c-.45-2.38-.93-3.09-1.26-3.4-.16-.16-1.38-5.02-7.99-6.17-.43-.07-.85.12-1.14.43-.57-.09-1.05-.44-1.26-.99-.12-.31-.26-.76-.41-1.63 2.36-1.29 4.01-4.18 4.04-7.54.72-3.01.53-5.13-.58-6.28-.61-.64-1.39-.85-2-.88-.65-1.19-2.06-1.79-4.17-1.79-3.05 0-5.18.86-6.34 2.56-1.68 2.46-.65 5.77-.41 6.45.05 3.34 1.7 6.21 4.04 7.48-.14.87-.28 1.32-.41 1.64-.23.61-.84 1.02-1.5 1.02-4.59 0-8.32 3.73-8.32 8.32v8.77c0 1.93 1.56 3.49 3.48 3.49.08 0 .15-.02.22-.02v6.17c0 .68.26 1.32.69 1.82v7.91c0 .81.39 1.52 1 1.98v3.17c0 1.79 1.46 3.24 3.24 3.24 1.79 0 3.25-1.45 3.25-3.24v-2.14c.67-.21 1.33-.45 1.97-.72v2.86c0 1.79 1.46 3.24 3.24 3.24 1.79 0 3.25-1.45 3.25-3.24v-6.2c.02-.02.05-.04.08-.06.6-.53.95-1.3.95-2.12v-8.5c.43-.49.69-1.14.69-1.83v-2.35c.11.01.23.03.35.03 1.92 0 3.48-1.56 3.48-3.49v-4.07c.32-.3.62-.58.86-.83.81-.81 1.16-1.97.96-3.09zm-20.02-19.38s0 0 0-.01c0-1.56.81-2.65 1.54-2.65.4 0 .67.06.85.19.86.64 1.63.97 2.43 1.02.29.01.57.01.85 0 1.04-.07 1.89-.62 2.44-1.02.18-.13.44-.19.84-.19.73 0 1.55 1.09 1.55 2.65v.01c0 3.76-2.36 6.83-5.25 6.83-2.9 0-5.25-3.07-5.25-6.83zm2.69 51.89c0 .96-.78 1.74-1.75 1.74-.96 0-1.74-.78-1.74-1.74v-2.64c.02 0 .04.01.07.01.81-.06 1.62-.16 2.4-.28.13.18.28.35.47.49.17.13.36.22.55.29zm-3.46-34.74c-.11-.29-.38-.5-.7-.5-.42 0-.75.33-.75.75v9.97c0 1.1-.89 1.99-1.99 1.99-1.09 0-1.98-.89-1.98-1.99v-8.77c0-3.76 3.06-6.82 6.82-6.82 1.28 0 2.45-.8 2.9-1.98.18-.46.32-.98.44-1.63.41.1.84.16 1.28.16s.87-.06 1.29-.16c.12.65.25 1.17.43 1.63.34.86 1.03 1.5 1.87 1.8-.97 1.56-3.55 4.41-9.61 5.55zm11.92 34.74c0 .96-.78 1.74-1.75 1.74-.96 0-1.74-.78-1.74-1.74v-3.5c1.37-.58 2.52-1.1 3.49-1.66zm5.55-24.52c0 1.1-.89 1.99-1.99 1.99-.11 0-.23-.01-.34-.03v-3.11c.83-.49 1.62-1.06 2.33-1.63z"></path></svg>
+                <!-- كارت حجاج الخارج -->
+                <div class="p-6 md:p-8 rounded-3xl border-2 border-brand-gold/30 hover:border-brand-gold bg-brand-goldLight dark:bg-slate-800 transition-all shadow-md hover:shadow-2xl flex flex-col items-center justify-between gap-6">
+                    <button onclick="loadGoogleSheet('external')" class="w-full group flex flex-col items-center justify-center gap-4">
+                        <div class="w-24 h-24 bg-brand-gold text-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+<svg id="fi_4448524" height="512" viewBox="0 0 48 48" width="512" xmlns="http://www.w3.org/2000/svg" data-name="Layer 16"><path d="m36.7 24.134a28.161 28.161 0 0 0 -8.53-3.67 13.463 13.463 0 0 0 4.83-9.75 8.871 8.871 0 0 0 -9-8.714 8.871 8.871 0 0 0 -9 8.714 13.463 13.463 0 0 0 4.827 9.749 28.161 28.161 0 0 0 -8.53 3.67 6.806 6.806 0 0 0 -3.297 5.867v15a1 1 0 0 0 1 1h30a1 1 0 0 0 1-1v-14.922a6.967 6.967 0 0 0 -3.3-5.944zm-12.7-20.134a7.023 7.023 0 0 1 6.4 4h-12.8a7.023 7.023 0 0 1 6.4-4zm-7 6.714a6.472 6.472 0 0 1 .041-.714h13.918a6.472 6.472 0 0 1 .041.714c0 3.667-3.136 9.286-7 9.286s-7-5.619-7-9.286zm-7 19.286a4.819 4.819 0 0 1 2.294-4.128c.661 1.428 2.817 5.528 6.306 7.045a1 1 0 0 0 .8-1.834c-2.968-1.29-4.9-5.2-5.364-6.214q.8-.434 1.537-.786c1.536 1.942 7.61 8.989 16.428 11.652v8.265h-22.001zm28 14h-4v-11a1 1 0 0 0 -2 0v.64c-7.34-2.432-12.7-8.211-14.516-10.384a17.267 17.267 0 0 1 6.516-1.256c2.634 0 6.081.457 11.666 3.844a4.957 4.957 0 0 1 2.334 4.234z"></path></svg>                        </div>
+                        <span class="text-3xl font-black text-brand-gold dark:text-brand-gold">حجاج الخارج</span>
+                        <span class="text-sm font-bold text-gray-600 dark:text-gray-200">بيانات التخصيص والدول لحجاج الخارج</span>
+                    </button>
+                    <!-- شارتات النسبة للخارج -->
+                    <div class="grid grid-cols-2 gap-4 w-full border-t border-gray-200 dark:border-slate-700 pt-4">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="h-28 w-28 relative"><canvas id="selExtCampsCanvas"></canvas></div>
+                            <span class="text-xs font-bold text-gray-700 dark:text-gray-100 mt-2">نسبة المخيمات من الإجمالي</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="h-28 w-28 relative"><canvas id="selExtPilgrimsCanvas"></canvas></div>
+                            <span class="text-xs font-bold text-gray-700 dark:text-gray-100 mt-2">نسبة الحجاج من الإجمالي</span>
+                        </div>
                     </div>
-                    <span class="text-3xl font-black text-brand-gold dark:text-brand-gold">حجاج الخارج</span>
-                    <span class="text-sm font-bold text-gray-500 dark:text-gray-400">بيانات التخصيص والدول لحجاج الخارج</span>
-                </button>
+                </div>
             </div>
             
             <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
@@ -232,10 +262,11 @@
                         حجاج بمشعر عرفات
                     </div>
 
+                    <!-- قائمة اختيار المخيم -->
                     <div class="flex flex-col md:flex-row items-center justify-center gap-4 relative" id="campDropdownContainer">
-                        <span id="labelSelectCamp" class="text-2xl font-black text-brand-green dark:text-brand-gold">البيانات المساحية للمخيم :</span>
+                        <span id="labelSelectCamp" class="text-2xl font-black text-brand-green dark:text-brand-gold">اختر اسم المخيم :</span>
                         <div class="relative w-full md:w-96 z-50">
-                            <input type="text" id="campSearchInput" class="w-full border-b-4 border-brand-green dark:border-brand-gold bg-brand-goldLight dark:bg-slate-800 rounded-t-xl p-3 text-2xl font-black text-center text-brand-green dark:text-white cursor-pointer focus:outline-none transition-all shadow-sm pointer-events-auto" placeholder="اختر الموقع..." readonly onclick="toggleDropdown()">
+                            <input type="text" id="campSearchInput" class="w-full border-b-4 border-brand-green dark:border-brand-gold bg-brand-goldLight dark:bg-slate-800 rounded-t-xl p-3 text-2xl font-black text-center text-brand-green dark:text-white cursor-pointer focus:outline-none transition-all shadow-sm pointer-events-auto" placeholder="اختر المخيم..." readonly onclick="toggleDropdown()">
                             <div class="dropdown-arrow absolute left-5 top-1/2 transform -translate-y-1/2 text-brand-green dark:text-brand-gold pointer-events-none no-print no-export">
                                 <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"></path></svg>
                             </div>
@@ -249,7 +280,30 @@
                     </div>
                 </div>
 
-                <div id="dataContainer">
+                <!-- 1. شاشة "الرئيسية" -->
+                <div id="overviewContainer" class="hidden">
+                    <div id="overviewCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 print-grid gap-5 mb-8"></div>
+                    <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl p-6 relative z-10 shadow-sm">
+                        <h3 id="overviewChartTitle" class="text-xl font-black text-brand-green dark:text-brand-gold text-center mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">
+                            توزيع المخيمات حسب التصنيف
+                        </h3>
+                        <div class="w-full h-[380px] relative flex items-center justify-center">
+                            <canvas id="overviewCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. شاشة انتظار اختيار المخيم -->
+                <div id="campSelectPlaceholder" class="hidden glass-card bg-white dark:bg-brand-cardDark rounded-3xl p-16 text-center my-6">
+                    <div class="w-20 h-20 bg-brand-goldLight dark:bg-brand-goldDark rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-brand-gold">
+                        <svg class="w-10 h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-black text-brand-green dark:text-brand-gold mb-2">يرجى اختيار اسم المخيم</h3>
+                    <p class="text-gray-500 dark:text-gray-400 font-medium">قم باختيار المخيم من القائمة المنسدلة بالأعلى لعرض بيانات التخصيص والحدود المساحية والجغرافية له</p>
+                </div>
+
+                <!-- 3. بيانات المخيم المحدد -->
+                <div id="dataContainer" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 print-grid gap-5 mb-6 relative z-10">
                         <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
                             <div class="bg-brand-gold text-white py-3 text-center font-bold text-lg">مساحة الموقع الكلية</div>
@@ -357,18 +411,20 @@
     <script>
         Chart.defaults.font.family = 'Tajawal';
         
-        // ================== ضع رابط الـ Web App الخاص بك هنا ==================
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysyqa9GXCKVC5HoXBJvjSo_ve-54brRThuaOCrIfYV6ZGYyBEob7SBLnan3Nus5dKa/exec";
-        // ==============================================================================
+        // رابط الـ Web App المعتمد الخاص بك
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzmjRFsAKPs9zeZkQ3DlfVtzxCJ__XSVstvK2dfEY4DOiUI-6e5x9Ipd5pkIwy8GK_w/exec";
 
         let globalWorkbook = null;
         let sheetsData = {};
         let currentSheetName = "";
         let dashboardData = [];
         let doughnutChartInstance = null;
+        let overviewChartInstance = null;
         let currentCampData = null;
         let fileHandle = null;
         let isExternal = false;
+        let summarySheetData = null;
+        let miniChartInstances = {};
 
         const URL_LOGO_EC = "https://iili.io/CwET9t9.png";
         const URL_LOGO_MIN = "https://upload.wikimedia.org/wikipedia/ar/thumb/a/ac/%D8%B4%D8%B9%D8%A7%D8%B1_%D9%88%D8%B2%D8%A7%D8%B1%D8%A9_%D8%A7%D9%84%D8%AD%D8%AC_%D9%88%D8%A7%D9%84%D8%B9%D9%85%D8%B1%D8%A9.svg/3840px-%D8%B4%D8%B9%D8%A7%D8%B1_%D9%88%D8%B2%D8%A7%D8%B1%D8%A9_%D8%A7%D9%84%D8%AD%D8%AC_%D9%88%D8%A7%D9%84%D8%B9%D9%85%D8%B1%D8%A9.svg.png";
@@ -384,7 +440,6 @@
             }
         });
 
-        // ================== نظام الدخول ==================
         async function handleLogin(e) {
             e.preventDefault();
             const u = document.getElementById('usernameInput').value.trim();
@@ -433,6 +488,24 @@
             document.getElementById('selectionSection').classList.remove('hidden');
             document.getElementById('logoutBtn').classList.remove('hidden');
             document.getElementById('uploadNewBtn').classList.add('hidden');
+            
+            // رسم الشارتات بالنسب الصحيحة فوراً (الداخل 19% و 9% | الخارج 81% و 91%)
+            renderSelectionCharts();
+            // محاولة التحديث اللحظي من جوجل شيت (في حال تم نشر كود السكربت المحدث)
+            fetchSummaryRatios();
+        }
+
+        async function fetchSummaryRatios() {
+            if (SCRIPT_URL.includes("XXXXX")) return;
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=getSummary`);
+                const json = await res.json();
+                if (json.success && json.data) {
+                    renderSelectionCharts(json.data);
+                }
+            } catch (err) {
+                console.log("الاعتماد على النسب الافتراضية الدقيقة:", err);
+            }
         }
 
         function logout() {
@@ -444,7 +517,63 @@
             showSelectionScreen();
         }
 
-        // ================== جلب الشيت (داخل / خارج) عبر رابط جوجل ==================
+        // رسم شارتات النسب الأربعة في شاشة الاختيار (تطابق الشيتات تماماً: الداخل 19% و 9% | الخارج 81% و 91%)
+        function renderSelectionCharts(customData = null) {
+            const intCamps = customData?.internal?.camps || 19;
+            const intPilgrims = customData?.internal?.pilgrims || 9;
+            const extCamps = customData?.external?.camps || 81;
+            const extPilgrims = customData?.external?.pilgrims || 91;
+
+            createMiniDoughnut('selIntCampsCanvas', intCamps, '#196d5a', `${intCamps}%`);
+            createMiniDoughnut('selIntPilgrimsCanvas', intPilgrims, '#196d5a', `${intPilgrims}%`);
+            createMiniDoughnut('selExtCampsCanvas', extCamps, '#c79a55', `${extCamps}%`);
+            createMiniDoughnut('selExtPilgrimsCanvas', extPilgrims, '#c79a55', `${extPilgrims}%`);
+        }
+
+        function createMiniDoughnut(canvasId, percentage, color, labelText) {
+            const el = document.getElementById(canvasId);
+            if(!el) return;
+            
+            // تدمير الشارت القديم لمنع تداخل الرسومات عند تبديل الوضع الليلي
+            if (miniChartInstances[canvasId]) {
+                miniChartInstances[canvasId].destroy();
+            }
+
+            const ctx = el.getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            miniChartInstances[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [percentage, Math.max(0, 100 - percentage)],
+                        backgroundColor: [color, isDark ? '#334155' : '#e2e8f0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '76%',
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    animation: { duration: 600 }
+                },
+                plugins: [{
+                    id: 'miniCenterText_' + canvasId,
+                    afterDraw: (chart) => {
+                        const width = chart.width, height = chart.height, cCtx = chart.ctx;
+                        cCtx.save();
+                        cCtx.font = '900 18px Tajawal';
+                        cCtx.fillStyle = isDark ? '#ffffff' : '#1e293b';
+                        cCtx.textAlign = 'center';
+                        cCtx.textBaseline = 'middle';
+                        cCtx.fillText(labelText, width / 2, height / 2);
+                        cCtx.restore();
+                    }
+                }]
+            });
+        }
+
         async function loadGoogleSheet(type) {
             const action = type === 'internal' ? 'getInternal' : 'getExternal';
             const fileName = type === 'internal' ? 'شيت الداخل.xlsx' : 'شيت الخارج.xlsx';
@@ -471,14 +600,19 @@
             }
         }
 
-        // تحويل استجابة الـ JSON الواردة من Google Apps Script لـ Dashboard Data
         function parseSheetsJson(jsonSheets, fileName) {
             updateTitleByFileName(fileName);
             sheetsData = {};
+            summarySheetData = null;
 
             Object.keys(jsonSheets).forEach(sheetName => {
                 const rows = jsonSheets[sheetName];
                 if (!rows || rows.length <= 1) return;
+
+                if (sheetName.includes("اجمالي") || sheetName.includes("الإجمالي")) {
+                    summarySheetData = rows[1] || rows[0];
+                    return;
+                }
 
                 const headerRow = rows[0];
                 let colMap = {};
@@ -626,7 +760,6 @@
             activateDashboardView();
         }
 
-        // ================== نظام القراءة والرفع اليدوي لملف الإكسيل ==================
         async function handleFileSelection() {
             if (window.showOpenFilePicker) {
                 try {
@@ -681,8 +814,17 @@
 
         function parseExcelWorkbook() {
             sheetsData = {};
+            summarySheetData = null;
+
             globalWorkbook.worksheets.forEach(worksheet => {
                 let sheetName = worksheet.name.trim();
+
+                if (sheetName.includes("اجمالي") || sheetName.includes("الإجمالي")) {
+                    let r2 = worksheet.getRow(2).values;
+                    summarySheetData = r2.slice(1);
+                    return;
+                }
+
                 let rowsData = [];
                 const headerRow = worksheet.getRow(1).values;
                 let colMap = {};
@@ -831,12 +973,11 @@
             activateDashboardView();
         }
 
-        // ================== التفعيل المشترك وعرض لوحة التحكم ==================
         function activateDashboardView() {
             const sheetNames = Object.keys(sheetsData);
             if (sheetNames.length > 0) {
                 buildSheetsNavbar(sheetNames);
-                switchSheet(sheetNames[0]);
+                switchSheet("main-overview");
                 document.getElementById('selectionSection').classList.add('hidden');
                 document.getElementById('dashboardSection').classList.remove('hidden');
                 document.getElementById('uploadNewBtn').classList.remove('hidden');
@@ -862,10 +1003,18 @@
         function buildSheetsNavbar(sheetNames) {
             const navbar = document.getElementById('sheetsNavbar');
             navbar.innerHTML = '';
+            
+            const mainBtn = document.createElement('button');
+            mainBtn.id = `sheetBtn-main-overview`;
+            mainBtn.className = "px-5 py-2.5 rounded-xl font-black text-lg transition-all shadow-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600";
+            mainBtn.textContent = "الرئيسية";
+            mainBtn.onclick = () => switchSheet("main-overview");
+            navbar.appendChild(mainBtn);
+
             sheetNames.forEach(name => {
                 const btn = document.createElement('button');
                 btn.id = `sheetBtn-${name}`;
-                btn.className = `px-5 py-2.5 rounded-xl font-black text-lg transition-all shadow-sm ${name === currentSheetName ? 'bg-brand-green text-white shadow-md scale-105' : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600'}`;
+                btn.className = `px-5 py-2.5 rounded-xl font-black text-lg transition-all shadow-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600`;
                 btn.textContent = name;
                 btn.onclick = () => switchSheet(name);
                 navbar.appendChild(btn);
@@ -874,7 +1023,7 @@
 
         function switchSheet(sheetName) {
             currentSheetName = sheetName;
-            dashboardData = sheetsData[sheetName] || [];
+            document.getElementById('saveChangesBtn').classList.add('hidden');
             
             document.querySelectorAll('#sheetsNavbar button').forEach(btn => {
                 if(btn.id === `sheetBtn-${sheetName}`) {
@@ -884,23 +1033,133 @@
                 }
             });
 
-            const cardCountTitle = document.getElementById('cardCountTitle');
-            const labelSelectCamp = document.getElementById('labelSelectCamp');
-            if (isExternal) {
-                cardCountTitle.textContent = "عدد الدول";
-                labelSelectCamp.textContent = "البيانات المساحية للمخيم :";
-            } else if (sheetName.includes("جهات حكومية")) {
-                cardCountTitle.textContent = "عدد الجهات";
-                labelSelectCamp.textContent = "البيانات المساحية للجهة :";
-            } else {
-                cardCountTitle.textContent = "عدد الشركات";
-                labelSelectCamp.textContent = "البيانات المساحية للمخيم :";
+            if (sheetName === "main-overview") {
+                document.getElementById('campDropdownContainer').classList.add('hidden');
+                document.getElementById('campSelectPlaceholder').classList.add('hidden');
+                document.getElementById('dataContainer').classList.add('hidden');
+                document.getElementById('overviewContainer').classList.remove('hidden');
+                
+                renderOverviewDashboard();
+                return;
             }
 
+            dashboardData = sheetsData[sheetName] || [];
+            
+            document.getElementById('overviewContainer').classList.add('hidden');
+            document.getElementById('campDropdownContainer').classList.remove('hidden');
+            document.getElementById('labelSelectCamp').textContent = "اختر اسم المخيم :";
+            document.getElementById('campSearchInput').value = "";
+            document.getElementById('campSearchInput').placeholder = "اختر المخيم...";
+            
+            document.getElementById('dataContainer').classList.add('hidden');
+            document.getElementById('campSelectPlaceholder').classList.remove('hidden');
+
             populateCampDropdown();
-            if(dashboardData.length > 0) {
-                selectCamp(dashboardData[0].campName);
+        }
+
+        function renderOverviewDashboard() {
+            const grid = document.getElementById('overviewCardsGrid');
+            grid.innerHTML = '';
+            
+            let dataRow = summarySheetData || [];
+
+            if (isExternal) {
+                const extCards = [
+                    { title: "إجمالي مساحة المخيمات الكلية", val: dataRow[2] || 0, unit: "م²" },
+                    { title: "إجمالي مساحة الخيام (5*5)", val: dataRow[3] || 0, unit: "م²" },
+                    { title: "إجمالي عدد الحجاج", val: dataRow[4] || 0, unit: "حاج" },
+                    { title: "إجمالي عدد الدول", val: dataRow[5] || 0, unit: "دولة" },
+                    { title: "إجمالي عدد الحجاج المخصص", val: dataRow[6] || 0, unit: "حاج" }
+                ];
+                extCards.forEach(c => grid.appendChild(createOverviewCard(c.title, c.val, c.unit)));
+
+                renderOverviewChart(
+                    ["مستقلة", "تشاركية"],
+                    [dataRow[7] || 0, dataRow[8] || 0],
+                    dataRow[9] || 521
+                );
+            } else {
+                const intCards = [
+                    { title: "إجمالي مساحة المخيمات الكلية", val: dataRow[2] || 0, unit: "م²" },
+                    { title: "المساحة المخصصة للإسكان", val: dataRow[3] || 0, unit: "م²" },
+                    { title: "إجمالي مساحة الخيام (5*5)", val: dataRow[4] || 0, unit: "م²" },
+                    { title: "إجمالي عدد الحجاج", val: dataRow[5] || 0, unit: "حاج" },
+                    { title: "إجمالي عدد الشركات", val: dataRow[6] || 0, unit: "شركة" },
+                    { title: "إجمالي عدد الحجاج المخصص", val: dataRow[7] || 0, unit: "حاج" }
+                ];
+                intCards.forEach(c => grid.appendChild(createOverviewCard(c.title, c.val, c.unit)));
+
+                renderOverviewChart(
+                    ["مستقلة", "تشاركية", "حكومية", "أبراج مستقلة", "أبراج تشاركية"],
+                    [dataRow[8] || 0, dataRow[9] || 0, dataRow[10] || 0, dataRow[11] || 0, dataRow[12] || 0],
+                    dataRow[13] || 125
+                );
             }
+        }
+
+        function createOverviewCard(title, value, unit) {
+            const card = document.createElement('div');
+            card.className = "glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden";
+            card.innerHTML = `
+                <div class="bg-brand-gold text-white py-3 text-center font-bold text-lg">${title}</div>
+                <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
+                    <div class="flex items-baseline justify-center gap-2">
+                        <span class="text-4xl font-black text-brand-green dark:text-white">${formatNumber(value)}</span>
+                        <span class="text-lg font-bold text-gray-500 dark:text-gray-400">${unit}</span>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function renderOverviewChart(labels, dataValues, totalCount) {
+            const ctx = document.getElementById('overviewCanvas').getContext('2d');
+            if (overviewChartInstance) overviewChartInstance.destroy();
+
+            const bgColors = ['#196d5a', '#c79a55', '#125243', '#d97706', '#0284c7'];
+            const isDark = document.documentElement.classList.contains('dark');
+
+            const formattedLabels = labels.map((lbl, idx) => {
+                let pct = totalCount > 0 ? Math.round((dataValues[idx] / totalCount) * 100) : 0;
+                return `${lbl} (${pct}%)`;
+            });
+
+            overviewChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: formattedLabels,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: bgColors.slice(0, dataValues.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 13, weight: 'bold' }, color: isDark ? '#ffffff' : '#125243', usePointStyle: true, padding: 15 } },
+                        tooltip: { rtl: true, titleFont: { family: 'Tajawal', size: 14 }, bodyFont: { family: 'Tajawal', size: 14, weight: 'bold' } }
+                    }
+                },
+                plugins: [{
+                    id: 'overviewCenterText',
+                    afterDraw: (chart) => {
+                        const width = chart.width, height = chart.height, cCtx = chart.ctx;
+                        cCtx.save();
+                        cCtx.textAlign = 'center';
+                        cCtx.textBaseline = 'middle';
+                        cCtx.font = 'bold 15px Tajawal';
+                        cCtx.fillStyle = '#9ca3af';
+                        cCtx.fillText('إجمالي المخيمات', width / 2, (height / 2) - 18);
+                        cCtx.font = '900 32px Tajawal';
+                        cCtx.fillStyle = isDark ? '#ffffff' : '#125243';
+                        cCtx.fillText(formatNumber(totalCount), width / 2, (height / 2) + 15);
+                        cCtx.restore();
+                    }
+                }]
+            });
         }
 
         function populateCampDropdown() {
@@ -927,6 +1186,10 @@
             document.getElementById('campSearchInput').value = campName;
             document.getElementById('dropdownList').classList.add('hidden');
             document.getElementById('saveChangesBtn').classList.add('hidden');
+            
+            document.getElementById('campSelectPlaceholder').classList.add('hidden');
+            document.getElementById('dataContainer').classList.remove('hidden');
+
             currentCampData = dashboardData.find(d => d.campName === campName);
             
             document.getElementById("val-totalArea").textContent = formatNumber(currentCampData.totalArea);
@@ -936,7 +1199,7 @@
             const unitHousingEl = document.getElementById("unit-housingArea");
             
             if (isExternal) {
-                titleCard2.textContent = currentCampData.isShared ? "الدول" : "الدولة";
+                titleCard2.textContent = currentCampData.isShared ? "الدول المخصصة" : "الدولة المخصصة";
                 let namesStr = (currentCampData.countryNames && currentCampData.countryNames.length > 0) 
                     ? currentCampData.countryNames.join(' / ') 
                     : "غير متوفر";
@@ -1095,9 +1358,9 @@
 
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
-            if(doughnutChartInstance && currentCampData) {
-                updateChart();
-            }
+            if(doughnutChartInstance && currentCampData) updateChart();
+            if(overviewChartInstance) renderOverviewDashboard();
+            renderSelectionCharts();
         }
 
         const centerTextPlugin = {
@@ -1238,11 +1501,13 @@
             const tempSpan = document.createElement('span');
             tempSpan.id = 'tempExportSpan';
             tempSpan.className = 'text-5xl font-black text-brand-green m-0 p-0 text-center inline-block w-[100px]';
-            tempSpan.innerText = inputEl.value;
-            inputEl.parentNode.insertBefore(tempSpan, inputEl);
-            inputEl.style.display = 'none'; 
+            if (inputEl) {
+                tempSpan.innerText = inputEl.value;
+                inputEl.parentNode.insertBefore(tempSpan, inputEl);
+                inputEl.style.display = 'none'; 
+            }
             
-            if(currentCampData) updateChart(true);
+            if(currentCampData && !document.getElementById('dataContainer').classList.contains('hidden')) updateChart(true);
             await new Promise(r => setTimeout(r, 800));
             return { element, wasDark };
         }
@@ -1255,10 +1520,10 @@
             const inputEl = document.getElementById('val-allocated-input');
             const tempSpan = document.getElementById('tempExportSpan');
             if(tempSpan) tempSpan.remove();
-            inputEl.style.display = '';
+            if(inputEl) inputEl.style.display = '';
 
             if(wasDark) document.documentElement.classList.add('dark');
-            if(currentCampData) updateChart(false);
+            if(currentCampData && !document.getElementById('dataContainer').classList.contains('hidden')) updateChart(false);
         }
 
         async function exportPDF() {
