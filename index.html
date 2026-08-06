@@ -231,7 +231,7 @@
         <!-- 3. شاشة الداشبورد وعرض البيانات المتجاوبة -->
         <div id="dashboardSection" class="hidden max-w-[1300px] mx-auto">
             
-            <!-- أزرار التبويبات (تم تعديلها ليظهر زر  في صف مستقل فوق الباقي) -->
+            <!-- أزرار التبويبات (زر "إجمالي تخصيص اسكان الحجاج" في كارت مستقل وعريض أعلى باقي التبويبات) -->
             <div id="sheetsNavbar" class="flex flex-col items-center gap-3 bg-white dark:bg-brand-cardDark shadow-md p-4 rounded-2xl mb-6 border border-gray-200 dark:border-slate-700 no-print transition-colors"></div>
 
             <div id="exportToolbar" class="flex flex-col sm:flex-row flex-wrap justify-between items-stretch sm:items-center bg-white dark:bg-brand-cardDark shadow-sm p-4 rounded-xl mb-6 border border-gray-200 dark:border-slate-700 no-print gap-4 transition-colors">
@@ -283,7 +283,7 @@
                     </div>
                 </div>
 
-                <!-- 1. شاشة "إجمالي تخصيص اسكان الحجاج" المتجاوبة (1 عمود للموبايل - 2 للتابلت - 3 للشاشات الكبيرة) -->
+                <!-- 1. شاشة "إجمالي تخصيص اسكان الحجاج" المتجاوبة -->
                 <div id="overviewContainer" class="hidden">
                     <div id="overviewCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 print-grid gap-4 sm:gap-5 mb-8"></div>
                     <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl p-4 sm:p-6 relative z-10 shadow-sm">
@@ -305,7 +305,7 @@
                     <p class="text-gray-500 dark:text-gray-400 font-medium text-sm sm:text-base">قم باختيار المخيم من القائمة المنسدلة بالأعلى لعرض بيانات التخصيص والحدود المساحية والجغرافية له</p>
                 </div>
 
-                <!-- 3. بيانات المخيم المحدد المتجاوبة (1 عمود للموبايل - 2 للتابلت - 4 للكمبيوتر) -->
+                <!-- 3. بيانات المخيم المحدد المتجاوبة -->
                 <div id="dataContainer" class="hidden">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 print-grid gap-4 sm:gap-5 mb-6 relative z-10">
                         <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
@@ -414,7 +414,7 @@
     <script>
         Chart.defaults.font.family = 'Tajawal';
         
-        // رابط الـ Web App المعتمد الخاص بك
+        // رابط الـ Web App المعتمد الخاص بك[cite: 3]
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzmjRFsAKPs9zeZkQ3DlfVtzxCJ__XSVstvK2dfEY4DOiUI-6e5x9Ipd5pkIwy8GK_w/exec";
 
         let globalWorkbook = null;
@@ -999,18 +999,18 @@
             }
         }
 
-        // بناء التبويبات (مع جعل زر "إجمالي تخصيص اسكان الحجاج" في صف علوي مستقل وفوق باقي التبويبات)
+        // بناء التبويبات (مع جعل زر "إجمالي تخصيص اسكان الحجاج" في كارت مستقل وعريض أعلى باقي التبويبات)
         function buildSheetsNavbar(sheetNames) {
             const navbar = document.getElementById('sheetsNavbar');
             navbar.innerHTML = '';
             
-            // الصف العلوي المستقل لزر إجمالي تخصيص اسكان الحجاج
+            // الصف العلوي المستقل لزر إجمالي تخصيص اسكان الحجاج (في كارت مستقل وعريض بعرض الصفحة)[cite: 3]
             const topContainer = document.createElement('div');
-            topContainer.className = "w-full flex justify-center border-b border-gray-100 dark:border-slate-700 pb-3";
+            topContainer.className = "w-full mb-4 pb-4 border-b-2 border-gray-100 dark:border-slate-700";
             
             const mainBtn = document.createElement('button');
             mainBtn.id = `sheetBtn-main-overview`;
-            mainBtn.className = "px-8 sm:px-10 py-2 sm:py-2.5 rounded-xl font-black text-base sm:text-lg transition-all shadow-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600";
+            mainBtn.className = "w-full py-4 px-6 rounded-2xl font-black text-lg sm:text-xl md:text-2xl transition-all shadow-md border-2 border-brand-gold/40 bg-brand-goldLight dark:bg-slate-800 text-brand-green dark:text-brand-gold hover:border-brand-gold hover:shadow-xl";
             mainBtn.textContent = "إجمالي تخصيص اسكان الحجاج";
             mainBtn.onclick = () => switchSheet("main-overview");
             topContainer.appendChild(mainBtn);
@@ -1037,11 +1037,18 @@
             
             document.querySelectorAll('#sheetsNavbar button').forEach(btn => {
                 const isMain = btn.id === "sheetBtn-main-overview";
-                const pad = isMain ? "px-8 sm:px-10" : "px-4 sm:px-5";
                 if(btn.id === `sheetBtn-${sheetName}`) {
-                    btn.className = `${pad} py-2 sm:py-2.5 rounded-xl font-black text-base sm:text-lg transition-all shadow-sm bg-brand-green text-white shadow-md scale-105`;
+                    if (isMain) {
+                        btn.className = "w-full py-4 px-6 rounded-2xl font-black text-lg sm:text-xl md:text-2xl transition-all shadow-lg border-2 border-brand-green bg-brand-green text-white scale-[1.01]";
+                    } else {
+                        btn.className = "px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-black text-base sm:text-lg transition-all shadow-sm bg-brand-green text-white shadow-md scale-105";
+                    }
                 } else {
-                    btn.className = `${pad} py-2 sm:py-2.5 rounded-xl font-black text-base sm:text-lg transition-all shadow-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600`;
+                    if (isMain) {
+                        btn.className = "w-full py-4 px-6 rounded-2xl font-black text-lg sm:text-xl md:text-2xl transition-all shadow-md border-2 border-brand-gold/40 bg-brand-goldLight dark:bg-slate-800 text-brand-green dark:text-brand-gold hover:border-brand-gold hover:bg-white dark:hover:bg-slate-700";
+                    } else {
+                        btn.className = "px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-black text-base sm:text-lg transition-all shadow-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600";
+                    }
                 }
             });
 
