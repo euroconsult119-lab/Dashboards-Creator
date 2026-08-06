@@ -231,7 +231,7 @@
         <!-- 3. شاشة الداشبورد وعرض البيانات المتجاوبة -->
         <div id="dashboardSection" class="hidden max-w-[1300px] mx-auto">
             
-            <!-- أزرار التبويبات (تم تعديلها ليظهر زر الرئيسية في صف مستقل فوق الباقي) -->
+            <!-- أزرار التبويبات (تم تعديلها ليظهر زر  في صف مستقل فوق الباقي) -->
             <div id="sheetsNavbar" class="flex flex-col items-center gap-3 bg-white dark:bg-brand-cardDark shadow-md p-4 rounded-2xl mb-6 border border-gray-200 dark:border-slate-700 no-print transition-colors"></div>
 
             <div id="exportToolbar" class="flex flex-col sm:flex-row flex-wrap justify-between items-stretch sm:items-center bg-white dark:bg-brand-cardDark shadow-sm p-4 rounded-xl mb-6 border border-gray-200 dark:border-slate-700 no-print gap-4 transition-colors">
@@ -283,7 +283,7 @@
                     </div>
                 </div>
 
-                <!-- 1. شاشة "الرئيسية" المتجاوبة (1 عمود للموبايل - 2 للتابلت - 3 للشاشات الكبيرة) -->
+                <!-- 1. شاشة "إجمالي تخصيص اسكان الحجاج" المتجاوبة (1 عمود للموبايل - 2 للتابلت - 3 للشاشات الكبيرة) -->
                 <div id="overviewContainer" class="hidden">
                     <div id="overviewCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 print-grid gap-4 sm:gap-5 mb-8"></div>
                     <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl p-4 sm:p-6 relative z-10 shadow-sm">
@@ -999,19 +999,19 @@
             }
         }
 
-        // بناء التبويبات (مع جعل زر "الرئيسية" في صف علوي مستقل وفوق باقي التبويبات)
+        // بناء التبويبات (مع جعل زر "إجمالي تخصيص اسكان الحجاج" في صف علوي مستقل وفوق باقي التبويبات)
         function buildSheetsNavbar(sheetNames) {
             const navbar = document.getElementById('sheetsNavbar');
             navbar.innerHTML = '';
             
-            // الصف العلوي المستقل لزر الرئيسية
+            // الصف العلوي المستقل لزر إجمالي تخصيص اسكان الحجاج
             const topContainer = document.createElement('div');
             topContainer.className = "w-full flex justify-center border-b border-gray-100 dark:border-slate-700 pb-3";
             
             const mainBtn = document.createElement('button');
             mainBtn.id = `sheetBtn-main-overview`;
             mainBtn.className = "px-8 sm:px-10 py-2 sm:py-2.5 rounded-xl font-black text-base sm:text-lg transition-all shadow-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600";
-            mainBtn.textContent = "الرئيسية";
+            mainBtn.textContent = "إجمالي تخصيص اسكان الحجاج";
             mainBtn.onclick = () => switchSheet("main-overview");
             topContainer.appendChild(mainBtn);
             navbar.appendChild(topContainer);
