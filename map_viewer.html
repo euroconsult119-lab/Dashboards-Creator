@@ -2,108 +2,81 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>KML & KMZ Secure Viewer</title>
+    <title>KMZ Viewer (Supabase)</title>
     
-    <!-- Leaflet CSS -->
+    <!-- استدعاء ملفات التنسيق لمكتبة Leaflet المجانية -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
-        html, body, #map { height: 100%; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; background-color: #f8fafc; }
+        html, body, #map { height: 100%; margin: 0; padding: 0; font-family: sans-serif; background-color: #f8fafc; }
         .error-msg { display: flex; justify-content: center; align-items: center; height: 100%; color: #df2c2f; font-weight: bold; font-size: 18px; text-align: center; padding: 20px; }
     </style>
-    
+
     <!-- مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div id="map"></div>
 
-    <!-- مكتبات الخرائط -->
+    <!-- استدعاء مكتبة Leaflet الأساسية -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- استدعاء مكتبة قراءة ملفات KMZ -->
     <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
-    <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <script>
-        // ==========================================
         // 1. ضع مفاتيح مشروعك في Supabase هنا
-        // ==========================================
         const SUPABASE_URL = 'https://rescepzzyzjzvddfxygp.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable__zQ1jKceZqBbA3UxNQkIoQ_Oyf6tJe9';
-        const BUCKET_NAME = 'CAMPS_KMZ'; // تأكد إن ده اسم الباكيت بتاعك بالظبط
+        const BUCKET_NAME = 'CAMPS_KMZ';
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        var map = L.map('map').setView([21.3378, 39.9949], 14);
 
+        // 2. إعداد الخريطة والمركز الافتراضي (مكة المكرمة) [نفس كودك القديم]
+        var map = L.map('map').setView([21.4225, 39.8261], 12);
+
+        // 3. إضافة طبقة الأقمار الصناعية المجانية (Esri World Imagery)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri'
         }).addTo(map);
 
+        // 4. قراءة اسم الملف من متغيرات الرابط
         var urlParams = new URLSearchParams(window.location.search);
         var fileName = urlParams.get('file');
 
         if (fileName) {
             fileName = fileName.trim();
             
-            // معالجة ذكية: لو الإكسيل مفيهوش .kmz، الكود هيضيفها تلقائياً
-            if (!fileName.toLowerCase().endsWith('.kmz') && !fileName.toLowerCase().endsWith('.kml')) {
+            // إضافة .kmz تلقائياً إذا نسيها المستخدم في الشيت
+            if (!fileName.toLowerCase().endsWith('.kmz')) {
                 fileName += '.kmz';
             }
 
-            // طلب الرابط من سوبابيز
+            // 5. جلب الرابط المشفر للـ KMZ من Supabase
             supabase.storage.from(BUCKET_NAME).createSignedUrl(fileName, 60).then(function(response) {
                 if (response.error) {
-                    console.error("Supabase Error:", response.error);
-                    document.getElementById('map').innerHTML = `<div class="error-msg" dir="rtl">عذراً، الخريطة غير متاحة.<br><br>تأكد من: <br>1. رفع ملف "${fileName}" في Supabase.<br>2. تفعيل صلاحيات القراءة (Policies) للـ Bucket.</div>`;
+                    document.getElementById('map').innerHTML = `<div class="error-msg" dir="rtl">عذراً، الخريطة غير متاحة.<br><br>تأكد من رفع ملف "${fileName}" في Supabase.</div>`;
                     return;
                 }
                 
-                var secureUrl = response.data.signedUrl; 
-                var lowerFileName = fileName.toLowerCase();
+                var secureKmzUrl = response.data.signedUrl; 
 
-                function renderFixedKML(kmlText) {
-                    var fixedKmlText = kmlText
-                        .replace(/<LinearRing>/g, '<Polygon><outerBoundaryIs><LinearRing>')
-                        .replace(/<\/LinearRing>/g, '</LinearRing></outerBoundaryIs></Polygon>');
-
-                    var customLayer = L.geoJson(null, {
-                        style: function () { return { color: '#0055ff', weight: 3, opacity: 1, fillOpacity: 0.3 }; }
-                    });
-
-                    function doZoom() {
-                        var bounds = customLayer.getBounds();
-                        if (bounds && bounds.isValid()) map.fitBounds(bounds);
+                // 6. تحميل وعرض ملف الـ KMZ على الخريطة (نفس كودك القديم الناجح)
+                var kmz = L.kmzLayer().addTo(map);
+                
+                kmz.on('load', function(e) {
+                    var bounds = e.layer.getBounds();
+                    if (bounds.isValid()) {
+                        // عمل Zoom تلقائي على حدود المشروع بمجرد تحميله
+                        map.fitBounds(bounds);
                     }
-
-                    customLayer.on('layeradd', function() { doZoom(); });
-
-                    omnivore.kml.parse(fixedKmlText, null, customLayer)
-                        .on('ready', function() { setTimeout(doZoom, 300); })
-                        .addTo(map);
-                }
-
-                if (lowerFileName.endsWith('.kmz')) {
-                    var kmz = L.kmzLayer().addTo(map);
-                    kmz.on('load', function(e) {
-                        var bounds = e.layer.getBounds();
-                        if (bounds && bounds.isValid() && Object.keys(e.layer._layers).length > 0) {
-                            map.fitBounds(bounds);
-                        } else {
-                            fixAndLoadKMZ(secureUrl);
-                        }
-                    });
-                    kmz.on('error', function() { fixAndLoadKMZ(secureUrl); });
-                    kmz.load(secureUrl);
-
-                    function fixAndLoadKMZ(url) {
-                        fetch(url).then(res => res.arrayBuffer()).then(buffer => JSZip.loadAsync(buffer)).then(zip => {
-                            var kmlFilename = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.kml'));
-                            if (kmlFilename) return zip.files[kmlFilename].async("string");
-                        }).then(kmlText => { if (kmlText) renderFixedKML(kmlText); });
-                    }
-                } else if (lowerFileName.endsWith('.kml')) {
-                    fetch(secureUrl).then(res => res.text()).then(kmlText => renderFixedKML(kmlText));
-                } 
+                });
+                
+                // تنفيذ التحميل من الرابط الآمن
+                kmz.load(secureKmzUrl);
             });
+        } else {
+            document.getElementById('map').innerHTML = `<div class="error-msg" dir="rtl">لم يتم تمرير اسم الخريطة.</div>`;
         }
     </script>
 </body>
