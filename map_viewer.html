@@ -2,81 +2,117 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>KMZ Viewer (Supabase)</title>
+    <title>KMZ Viewer (Debug Mode)</title>
     
-    <!-- استدعاء ملفات التنسيق لمكتبة Leaflet المجانية -->
+    <!-- استدعاء ملفات التنسيق -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
         html, body, #map { height: 100%; margin: 0; padding: 0; font-family: sans-serif; background-color: #f8fafc; }
-        .error-msg { display: flex; justify-content: center; align-items: center; height: 100%; color: #df2c2f; font-weight: bold; font-size: 18px; text-align: center; padding: 20px; }
+        /* صندوق الأخطاء هيظهر لو في مشكلة */
+        #error-box { display: none; position: absolute; top: 10px; left: 10px; right: 10px; background: rgba(223, 44, 47, 0.9); color: white; padding: 15px; z-index: 9999; text-align: center; border-radius: 8px; font-weight: bold; direction: rtl; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
     </style>
 
     <!-- مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+    
+    <!-- صندوق عرض الأخطاء -->
+    <div id="error-box"></div>
+    
+    <!-- حاوية الخريطة -->
     <div id="map"></div>
 
     <!-- استدعاء مكتبة Leaflet الأساسية -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <!-- استدعاء مكتبة قراءة ملفات KMZ -->
     <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
 
     <script>
-        // 1. ضع مفاتيح مشروعك في Supabase هنا
+        // دالة لعرض الأخطاء على الشاشة مباشرة
+        function showError(msg) {
+            var box = document.getElementById('error-box');
+            box.style.display = 'block';
+            box.innerHTML += msg + '<br><br>';
+            console.error(msg);
+        }
+
+        // التقاط أي خطأ في المتصفح وعرضه
+        window.onerror = function(msg, url, line) {
+            showError("يوجد خطأ في الكود (سطر " + line + "): " + msg);
+            return false;
+        };
+
+        // 1. تشغيل خريطة الأقمار الصناعية فوراً لضمان عدم ظهور شاشة بيضاء
+        try {
+            var map = L.map('map').setView([21.4225, 39.8261], 12);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri'
+            }).addTo(map);
+        } catch(e) {
+            showError("حدث خطأ أثناء رسم الخريطة الأساسية: " + e.message);
+        }
+
+        // ========================================================
+        // 2. ضع المفاتيح هنا (تأكد من بقاء علامات التنصيص ' ' حول الرابط والمفتاح)
+        // ========================================================
         const SUPABASE_URL = 'https://rescepzzyzjzvddfxygp.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable__zQ1jKceZqBbA3UxNQkIoQ_Oyf6tJe9';
         const BUCKET_NAME = 'CAMPS_KMZ';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        if (SUPABASE_URL.includes("ضع_رابط") || SUPABASE_ANON_KEY.includes("ضع_مفتاح")) {
+            showError("تحذير: أنت لم تقم بإضافة روابط سوبابيز داخل ملف map_viewer.html");
+        }
 
-        // 2. إعداد الخريطة والمركز الافتراضي (مكة المكرمة) [نفس كودك القديم]
-        var map = L.map('map').setView([21.4225, 39.8261], 12);
-
-        // 3. إضافة طبقة الأقمار الصناعية المجانية (Esri World Imagery)
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri'
-        }).addTo(map);
-
-        // 4. قراءة اسم الملف من متغيرات الرابط
-        var urlParams = new URLSearchParams(window.location.search);
-        var fileName = urlParams.get('file');
-
-        if (fileName) {
-            fileName = fileName.trim();
+        // 3. محاولة الاتصال بـ Supabase وجلب الملف
+        try {
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            // إضافة .kmz تلقائياً إذا نسيها المستخدم في الشيت
-            if (!fileName.toLowerCase().endsWith('.kmz')) {
-                fileName += '.kmz';
-            }
+            var urlParams = new URLSearchParams(window.location.search);
+            var fileName = urlParams.get('file');
 
-            // 5. جلب الرابط المشفر للـ KMZ من Supabase
-            supabase.storage.from(BUCKET_NAME).createSignedUrl(fileName, 60).then(function(response) {
-                if (response.error) {
-                    document.getElementById('map').innerHTML = `<div class="error-msg" dir="rtl">عذراً، الخريطة غير متاحة.<br><br>تأكد من رفع ملف "${fileName}" في Supabase.</div>`;
-                    return;
+            if (fileName) {
+                fileName = fileName.trim();
+                
+                // التأكد من وجود امتداد .kmz
+                if (!fileName.toLowerCase().endsWith('.kmz') && !fileName.toLowerCase().endsWith('.kml')) {
+                    fileName += '.kmz';
                 }
-                
-                var secureKmzUrl = response.data.signedUrl; 
 
-                // 6. تحميل وعرض ملف الـ KMZ على الخريطة (نفس كودك القديم الناجح)
-                var kmz = L.kmzLayer().addTo(map);
-                
-                kmz.on('load', function(e) {
-                    var bounds = e.layer.getBounds();
-                    if (bounds.isValid()) {
-                        // عمل Zoom تلقائي على حدود المشروع بمجرد تحميله
-                        map.fitBounds(bounds);
+                // طلب الرابط السري من سوبابيز
+                supabase.storage.from(BUCKET_NAME).createSignedUrl(fileName, 60).then(function(response) {
+                    if (response.error) {
+                        showError("عذراً، سوبابيز يرفض إعطاء الخريطة: " + response.error.message + "<br>تأكد أن الملف اسمه (" + fileName + ") وموجود فعلاً في الباكيت.");
+                        return;
                     }
+                    
+                    var secureKmzUrl = response.data.signedUrl; 
+                    var kmz = L.kmzLayer().addTo(map);
+                    
+                    kmz.on('load', function(e) {
+                        var bounds = e.layer.getBounds();
+                        if (bounds.isValid()) {
+                            map.fitBounds(bounds);
+                        }
+                    });
+
+                    kmz.on('error', function(e) {
+                        showError("تم جلب الرابط، ولكن حدث خطأ أثناء فك تشفير الـ KMZ. قد يكون الملف تالفاً أو هناك حماية (CORS) تمنع قراءته.");
+                    });
+                    
+                    kmz.load(secureKmzUrl);
+                    
+                }).catch(function(err){
+                    showError("فشل الاتصال بسيرفر سوبابيز: " + err.message);
                 });
                 
-                // تنفيذ التحميل من الرابط الآمن
-                kmz.load(secureKmzUrl);
-            });
-        } else {
-            document.getElementById('map').innerHTML = `<div class="error-msg" dir="rtl">لم يتم تمرير اسم الخريطة.</div>`;
+            } else {
+                // تظهر هذه الرسالة لو فتحت الملف بمفرده بدون المنصة
+                showError("تنبيه: أنت قمت بفتح عارض الخرائط بمفرده. لم يتم تمرير أي خريطة لعرضها.");
+            }
+        } catch (e) {
+            showError("خطأ قاتل في إعداد سوبابيز: " + e.message);
         }
     </script>
 </body>
