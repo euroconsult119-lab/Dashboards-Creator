@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>KML & KMZ Secure Viewer</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        html, body, #map { height: 100%; margin: 0; padding: 0; font-family: sans-serif; background-color: #f8fafc; }
+    </style>
+    
+    <!-- مكتبة Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- مكتبات الخرائط الخاصة بك -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
+    <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+        // ==========================================
+        // 1. ضع مفاتيح مشروعك في Supabase هنا
+        // ==========================================
+        const SUPABASE_URL = 'https://rescepzzyzjzvddfxygp.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable__zQ1jKceZqBbA3UxNQkIoQ_Oyf6tJe9';
+        
+        // اسم الـ Bucket كما هو في الصورة التي أرسلتها سابقاً
+        const BUCKET_NAME = 'CAMPS_KMZ';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        var map = L.map('map').setView([21.3378, 39.9949], 14); // إحداثيات المشاعر التقريبية
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri'
+        }).addTo(map);
+
+        // جلب اسم الملف من الرابط اللي المنصة بتبعته
+        var urlParams = new URLSearchParams(window.location.search);
+        var fileName = urlParams.get('file');
+
+        if (fileName) {
+            
+            // 2. طلب الرابط المشفر (Signed URL) صالح لمدة 60 ثانية
+            supabase.storage.from(BUCKET_NAME).createSignedUrl(fileName, 60).then(function(response) {
+                if (response.error) {
+                    alert("عذراً، الخريطة غير متاحة أو ليس لديك صلاحية الوصول.");
+                    console.error("Supabase Error:", response.error);
+                    return;
+                }
+                
+                // الرابط المؤقت الآمن
+                var secureUrl = response.data.signedUrl; 
+                var lowerFileName = fileName.toLowerCase();
+
+                // =========================================================
+                // دالة رسم الملفات الجديدة (معادلتك الأصلية الناجحة)
+                // =========================================================
+                function renderFixedKML(kmlText) {
+                    var fixedKmlText = kmlText
+                        .replace(/<LinearRing>/g, '<Polygon><outerBoundaryIs><LinearRing>')
+                        .replace(/<\/LinearRing>/g, '</LinearRing></outerBoundaryIs></Polygon>');
+
+                    var customLayer = L.geoJson(null, {
+                        style: function () {
+                            return { color: '#0055ff', weight: 3, opacity: 1, fillOpacity: 0.3 };
+                        }
+                    });
+
+                    function doZoom() {
+                        var bounds = customLayer.getBounds();
+                        if (bounds && bounds.isValid()) {
+                            map.fitBounds(bounds);
+                        }
+                    }
+
+                    customLayer.on('layeradd', function() { doZoom(); });
+
+                    omnivore.kml.parse(fixedKmlText, null, customLayer)
+                        .on('ready', function() { setTimeout(doZoom, 300); })
+                        .addTo(map);
+                }
+
+                // =========================================================
+                // التعامل مع ملفات KMZ و KML
+                // =========================================================
+                if (lowerFileName.endsWith('.kmz')) {
+                    var kmz = L.kmzLayer().addTo(map);
+                    
+                    kmz.on('load', function(e) {
+                        var bounds = e.layer.getBounds();
+                        if (bounds && bounds.isValid() && Object.keys(e.layer._layers).length > 0) {
+                            map.fitBounds(bounds);
+                        } else {
+                            fixAndLoadKMZ(secureUrl);
+                        }
+                    });
+
+                    kmz.on('error', function() { fixAndLoadKMZ(secureUrl); });
+                    
+                    // تشغيل الملف من الرابط الآمن
+                    kmz.load(secureUrl);
+
+                    function fixAndLoadKMZ(url) {
+                        fetch(url)
+                            .then(res => res.arrayBuffer())
+                            .then(buffer => JSZip.loadAsync(buffer))
+                            .then(zip => {
+                                var kmlFilename = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.kml'));
+                                if (kmlFilename) {
+                                    return zip.files[kmlFilename].async("string");
+                                }
+                            })
+                            .then(kmlText => {
+                                if (kmlText) renderFixedKML(kmlText);
+                            });
+                    }
+                } 
+                else if (lowerFileName.endsWith('.kml')) {
+                    fetch(secureUrl)
+                        .then(res => res.text())
+                        .then(kmlText => renderFixedKML(kmlText))
+                        .catch(err => alert("خطأ في تحميل KML: " + err.message));
+                } 
+                else {
+                    alert("صيغة الملف غير مدعومة! يرجى استخدام .kml أو .kmz");
+                }
+            });
+        }
+    </script>
+</body>
+</html>
