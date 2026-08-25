@@ -2,13 +2,18 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>KMZ Viewer (Debug Pro)</title>
+    <title>KMZ Secure Viewer</title>
+    
+    <!-- استدعاء ملفات التنسيق -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
-        html, body, #map { height: 100%; margin: 0; padding: 0; background-color: #f8fafc; }
-        #error-box { display: none; position: absolute; top: 0; left: 0; right: 0; background: #df2c2f; color: white; padding: 15px; z-index: 9999; text-align: center; font-family: sans-serif; font-weight: bold; direction: rtl; line-height: 1.6; }
+        html, body, #map { height: 100%; margin: 0; padding: 0; background-color: #f8fafc; font-family: sans-serif; }
+        #error-box { display: none; position: absolute; top: 10px; left: 10px; right: 10px; background: rgba(223, 44, 47, 0.9); color: white; padding: 15px; z-index: 9999; text-align: center; border-radius: 8px; font-weight: bold; direction: rtl; line-height: 1.6; }
         #error-box a { color: #ffeb3b; text-decoration: underline; word-break: break-all; }
     </style>
+
+    <!-- مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -33,29 +38,31 @@
         }).addTo(map);
 
         // ========================================================
-        // 1. ضع مفاتيح سوبابيز هنا 
+        // المفاتيح المظبوطة بالملي 
         // ========================================================
-       const SUPABASE_URL = 'https://rescepzzyzjzvddfxygp.supabase.co'; 
+        const SUPABASE_URL = 'https://rescepzzyzjzvddfxygp.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable__zQ1jKceZqBbA3UxNQkIoQ_Oyf6tJe9';
-        const BUCKET_NAME = 'Camps_KMZ';
+        const BUCKET_NAME = 'Camps_KMZ'; // تم تصحيح حالة الحروف
 
-        if (SUPABASE_URL.includes("ضع_رابط")) {
-            showError("تنبيه: لم تقم بإضافة روابط سوبابيز داخل الكود.");
-        } else {
-            try {
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                var urlParams = new URLSearchParams(window.location.search);
-                var fileName = urlParams.get('file');
+        try {
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            var urlParams = new URLSearchParams(window.location.search);
+            var fileName = urlParams.get('file');
 
-                if (fileName) {
-                    fileName = fileName.trim();
-                    if (!fileName.toLowerCase().endsWith('.kmz') && !fileName.toLowerCase().endsWith('.kml')) {
-                        fileName += '.kmz';
+            if (fileName) {
+                fileName = fileName.trim();
+                if (!fileName.toLowerCase().endsWith('.kmz') && !fileName.toLowerCase().endsWith('.kml')) {
+                    fileName += '.kmz';
+                }
+
+                // سحب الرابط المشفر الآمن
+                supabase.storage.from(BUCKET_NAME).createSignedUrl(fileName, 60).then(function(response) {
+                    if (response.error) {
+                        showError("عذراً، سوبابيز يرفض إعطاء الخريطة: " + response.error.message + "<br>تأكد أن الملف اسمه (" + fileName + ") موجود في الباكيت.");
+                        return;
                     }
-
-                    // توليد الرابط المباشر
-                    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
-                    var publicUrl = data.publicUrl;
+                    
+                    var secureUrl = response.data.signedUrl; 
 
                     function renderFixedKML(kmlText) {
                         var fixedKmlText = kmlText.replace(/<LinearRing>/g, '<Polygon><outerBoundaryIs><LinearRing>')
@@ -76,28 +83,26 @@
                         if (bounds && bounds.isValid() && Object.keys(e.layer._layers).length > 0) {
                             map.fitBounds(bounds);
                         } else {
-                            fixAndLoadKMZ(publicUrl);
+                            fixAndLoadKMZ(secureUrl);
                         }
                     });
-                    kmz.on('error', function() { fixAndLoadKMZ(publicUrl); });
+                    kmz.on('error', function() { fixAndLoadKMZ(secureUrl); });
                     
-                    // محاولة التحميل الأولى
-                    kmz.load(publicUrl);
+                    kmz.load(secureUrl);
 
                     function fixAndLoadKMZ(url) {
                         fetch(url).then(res => {
-                            // لو المتصفح اترفض، هيطلعلك الرابط تضغط عليه
-                            if(!res.ok) throw new Error(`عذراً، الملف غير موجود أو سوبابيز يمنع الوصول إليه.<br><br>الرابط الذي نحاول فتحه هو:<br><a href="${url}" target="_blank">${url}</a><br><br>اضغط على الرابط أعلاه لترى إن كان سيعمل بمفرده.`);
+                            if(!res.ok) throw new Error(`فشل فتح الخريطة. الرابط المرفوض:<br><a href="${url}" target="_blank">اضغط هنا للتجربة</a>`);
                             return res.arrayBuffer();
                         }).then(buffer => JSZip.loadAsync(buffer)).then(zip => {
                             var kmlFilename = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.kml'));
                             if (kmlFilename) return zip.files[kmlFilename].async("string");
                         }).then(kmlText => { if (kmlText) renderFixedKML(kmlText); }).catch(err => showError(err.message));
                     }
-                }
-            } catch (e) {
-                showError("خطأ في الاتصال: " + e.message);
+                });
             }
+        } catch (e) {
+            showError("خطأ في الاتصال: " + e.message);
         }
     </script>
 </body>
