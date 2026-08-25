@@ -2,29 +2,20 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>KMZ Viewer</title>
-    
-    <!-- استدعاء ملفات التنسيق -->
+    <title>KMZ Viewer (Debug Pro)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
     <style>
         html, body, #map { height: 100%; margin: 0; padding: 0; background-color: #f8fafc; }
-        /* صندوق الأخطاء هيظهر بس لو فيه مشكلة */
-        #error-box { display: none; position: absolute; top: 0; left: 0; right: 0; background: #df2c2f; color: white; padding: 10px; z-index: 9999; text-align: center; font-family: sans-serif; font-weight: bold; direction: rtl; }
+        #error-box { display: none; position: absolute; top: 0; left: 0; right: 0; background: #df2c2f; color: white; padding: 15px; z-index: 9999; text-align: center; font-family: sans-serif; font-weight: bold; direction: rtl; line-height: 1.6; }
+        #error-box a { color: #ffeb3b; text-decoration: underline; word-break: break-all; }
     </style>
-
-    <!-- مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     
-    <!-- صندوق عرض الأخطاء -->
     <div id="error-box"></div>
-    
-    <!-- الخريطة -->
     <div id="map"></div>
 
-    <!-- استدعاء مكتبات الخرائط -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
     <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
@@ -33,26 +24,24 @@
     <script>
         function showError(msg) {
             document.getElementById('error-box').style.display = 'block';
-            document.getElementById('error-box').innerHTML += msg + '<br>';
+            document.getElementById('error-box').innerHTML = msg;
         }
 
-        // 1. رسم الخريطة الأساسية فوراً (لضمان عدم ظهور شاشة بيضاء)
         var map = L.map('map').setView([21.4225, 39.8261], 12);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri'
         }).addTo(map);
 
         // ========================================================
-        // 2. ضع المفاتيح هنا (حافظ على علامات التنصيص ' ')
+        // 1. ضع مفاتيح سوبابيز هنا 
         // ========================================================
-        const SUPABASE_URL = 'https://rescepzzyzjzvddfxygp.supabase.co'; 
+       const SUPABASE_URL = 'https://rescepzzyzjzvddfxygp.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable__zQ1jKceZqBbA3UxNQkIoQ_Oyf6tJe9';
         const BUCKET_NAME = 'Camps_KMZ';
 
         if (SUPABASE_URL.includes("ضع_رابط")) {
             showError("تنبيه: لم تقم بإضافة روابط سوبابيز داخل الكود.");
         } else {
-            // 3. الاتصال بسوبابيز وجلب الخريطة
             try {
                 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 var urlParams = new URLSearchParams(window.location.search);
@@ -60,17 +49,14 @@
 
                 if (fileName) {
                     fileName = fileName.trim();
-                    
-                    // إضافة .kmz تلقائياً
                     if (!fileName.toLowerCase().endsWith('.kmz') && !fileName.toLowerCase().endsWith('.kml')) {
                         fileName += '.kmz';
                     }
 
-                    // الحصول على الرابط السريع (Public URL)
+                    // توليد الرابط المباشر
                     const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
                     var publicUrl = data.publicUrl;
 
-                    // دالة معالجة الملفات المعقدة
                     function renderFixedKML(kmlText) {
                         var fixedKmlText = kmlText.replace(/<LinearRing>/g, '<Polygon><outerBoundaryIs><LinearRing>')
                                                   .replace(/<\/LinearRing>/g, '</LinearRing></outerBoundaryIs></Polygon>');
@@ -84,7 +70,6 @@
                         }).addTo(map);
                     }
 
-                    // تحميل الـ KMZ
                     var kmz = L.kmzLayer().addTo(map);
                     kmz.on('load', function(e) {
                         var bounds = e.layer.getBounds();
@@ -95,11 +80,14 @@
                         }
                     });
                     kmz.on('error', function() { fixAndLoadKMZ(publicUrl); });
+                    
+                    // محاولة التحميل الأولى
                     kmz.load(publicUrl);
 
                     function fixAndLoadKMZ(url) {
                         fetch(url).then(res => {
-                            if(!res.ok) throw new Error("عذراً، الملف غير موجود في سوبابيز. تأكد من رفع الملف باسم: " + fileName);
+                            // لو المتصفح اترفض، هيطلعلك الرابط تضغط عليه
+                            if(!res.ok) throw new Error(`عذراً، الملف غير موجود أو سوبابيز يمنع الوصول إليه.<br><br>الرابط الذي نحاول فتحه هو:<br><a href="${url}" target="_blank">${url}</a><br><br>اضغط على الرابط أعلاه لترى إن كان سيعمل بمفرده.`);
                             return res.arrayBuffer();
                         }).then(buffer => JSZip.loadAsync(buffer)).then(zip => {
                             var kmlFilename = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.kml'));
