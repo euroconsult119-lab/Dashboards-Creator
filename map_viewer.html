@@ -2,26 +2,18 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>KMZ Viewer (Public Mode)</title>
-    
-    <!-- استدعاء ملفات التنسيق -->
+    <title>KMZ Secure Viewer</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
     <style>
         html, body, #map { height: 100%; margin: 0; padding: 0; font-family: sans-serif; background-color: #f8fafc; }
         #error-box { display: none; position: absolute; top: 10px; left: 10px; right: 10px; background: rgba(223, 44, 47, 0.9); color: white; padding: 15px; z-index: 9999; text-align: center; border-radius: 8px; font-weight: bold; direction: rtl; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
     </style>
-
-    <!-- مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    
-    <!-- صندوق عرض الأخطاء -->
     <div id="error-box"></div>
     <div id="map"></div>
 
-    <!-- استدعاء مكتبات الخرائط -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
     <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
@@ -30,107 +22,75 @@
     <script>
         function showError(msg) {
             var box = document.getElementById('error-box');
-            box.style.display = 'block';
-            box.innerHTML += msg + '<br><br>';
+            box.style.display = 'block'; box.innerHTML += msg + '<br><br>';
         }
 
-        // 1. رسم الخريطة الأساسية (الأقمار الصناعية)
         var map = L.map('map').setView([21.4225, 39.8261], 12);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri'
         }).addTo(map);
 
         // ========================================================
-        // 2. ضع المفاتيح هنا (تأكد من بقاء علامات التنصيص ' ' )
+        // ضع المفاتيح هنا (بين علامات التنصيص)
         // ========================================================
         const SUPABASE_URL = 'https://rescepzzyzjzvddfxygp.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable__zQ1jKceZqBbA3UxNQkIoQ_Oyf6tJe9';
-        const BUCKET_NAME = 'Camps_KMZ';
-
-        if (SUPABASE_URL.includes("ضع_رابط")) {
-            showError("لم تقم بإضافة روابط سوبابيز داخل الكود.");
-        }
+        const BUCKET_NAME = 'Camps_KMZ'; // الاسم الدقيق بالكابيتال والسمول
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
         var urlParams = new URLSearchParams(window.location.search);
         var fileName = urlParams.get('file');
 
         if (fileName) {
             fileName = fileName.trim();
-            
-            // إضافة .kmz تلقائياً لو مش مكتوبة
             if (!fileName.toLowerCase().endsWith('.kmz') && !fileName.toLowerCase().endsWith('.kml')) {
                 fileName += '.kmz';
             }
 
-            // 3. سحب الرابط العام المباشر السريع
-            const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
-            var publicKmzUrl = data.publicUrl;
-            var lowerFileName = fileName.toLowerCase();
-
-            // الدالة المساعدة لفك الخرائط المعقدة (نفس الدالة الناجحة القديمة الخاصة بك)
-            function renderFixedKML(kmlText) {
-                var fixedKmlText = kmlText
-                    .replace(/<LinearRing>/g, '<Polygon><outerBoundaryIs><LinearRing>')
-                    .replace(/<\/LinearRing>/g, '</LinearRing></outerBoundaryIs></Polygon>');
-
-                var customLayer = L.geoJson(null, {
-                    style: function () { return { color: '#0055ff', weight: 3, opacity: 1, fillOpacity: 0.3 }; }
-                });
-
-                customLayer.on('layeradd', function() { 
-                    var bounds = customLayer.getBounds();
-                    if (bounds && bounds.isValid()) map.fitBounds(bounds);
-                });
-
-                omnivore.kml.parse(fixedKmlText, null, customLayer)
-                    .on('ready', function() { 
-                        setTimeout(function(){
-                            var bounds = customLayer.getBounds();
-                            if(bounds.isValid()) map.fitBounds(bounds);
-                        }, 300); 
-                    }).addTo(map);
-            }
-
-            if (lowerFileName.endsWith('.kmz')) {
-                var kmz = L.kmzLayer().addTo(map);
-                
-                kmz.on('load', function(e) {
-                    var bounds = e.layer.getBounds();
-                    if (bounds && bounds.isValid() && Object.keys(e.layer._layers).length > 0) {
-                        map.fitBounds(bounds);
-                    } else {
-                        fixAndLoadKMZ(publicKmzUrl);
-                    }
-                });
-
-                kmz.on('error', function() { fixAndLoadKMZ(publicKmzUrl); });
-                
-                kmz.load(publicKmzUrl);
-
-                function fixAndLoadKMZ(url) {
-                    fetch(url).then(res => {
-                        if(!res.ok) throw new Error("عذراً، الملف غير موجود في سوبابيز. تأكد من أنك رفعت الملف بشكل مباشر (وليس داخل مجلد)، وأن الباكيت أصبح Public.");
-                        return res.arrayBuffer();
-                    }).then(buffer => JSZip.loadAsync(buffer)).then(zip => {
-                        var kmlFilename = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.kml'));
-                        if (kmlFilename) return zip.files[kmlFilename].async("string");
-                    }).then(kmlText => { 
-                        if (kmlText) renderFixedKML(kmlText); 
-                    }).catch(err => {
-                        showError(err.message);
-                    });
+            // توليد رابط مؤقت آمن لمدة 60 ثانية فقط
+            supabase.storage.from(BUCKET_NAME).createSignedUrl(fileName, 60).then(function(response) {
+                if (response.error) {
+                    showError("لا يمكن الوصول للملف، تأكد من وجوده باسم: " + fileName);
+                    return;
                 }
-            } else if (lowerFileName.endsWith('.kml')) {
-                fetch(publicKmzUrl).then(res => {
-                    if(!res.ok) throw new Error("الملف غير موجود");
-                    return res.text();
-                }).then(kmlText => renderFixedKML(kmlText)).catch(err => showError(err.message));
-            }
-            
-        } else {
-            showError("لم يتم استلام أي اسم للخريطة.");
+                
+                var secureKmzUrl = response.data.signedUrl;
+                var lowerFileName = fileName.toLowerCase();
+
+                function renderFixedKML(kmlText) {
+                    var fixedKmlText = kmlText.replace(/<LinearRing>/g, '<Polygon><outerBoundaryIs><LinearRing>')
+                                              .replace(/<\/LinearRing>/g, '</LinearRing></outerBoundaryIs></Polygon>');
+                    var customLayer = L.geoJson(null, { style: function () { return { color: '#0055ff', weight: 3, opacity: 1, fillOpacity: 0.3 }; } });
+                    customLayer.on('layeradd', function() { 
+                        var bounds = customLayer.getBounds();
+                        if (bounds && bounds.isValid()) map.fitBounds(bounds);
+                    });
+                    omnivore.kml.parse(fixedKmlText, null, customLayer).on('ready', function() { 
+                        setTimeout(function(){ var bounds = customLayer.getBounds(); if(bounds.isValid()) map.fitBounds(bounds); }, 300); 
+                    }).addTo(map);
+                }
+
+                if (lowerFileName.endsWith('.kmz')) {
+                    var kmz = L.kmzLayer().addTo(map);
+                    kmz.on('load', function(e) {
+                        var bounds = e.layer.getBounds();
+                        if (bounds && bounds.isValid() && Object.keys(e.layer._layers).length > 0) {
+                            map.fitBounds(bounds);
+                        } else { fixAndLoadKMZ(secureKmzUrl); }
+                    });
+                    kmz.on('error', function() { fixAndLoadKMZ(secureKmzUrl); });
+                    kmz.load(secureKmzUrl);
+
+                    function fixAndLoadKMZ(url) {
+                        fetch(url).then(res => res.arrayBuffer()).then(buffer => JSZip.loadAsync(buffer)).then(zip => {
+                            var kmlFilename = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.kml'));
+                            if (kmlFilename) return zip.files[kmlFilename].async("string");
+                        }).then(kmlText => { if (kmlText) renderFixedKML(kmlText); }).catch(err => showError(err.message));
+                    }
+                } else if (lowerFileName.endsWith('.kml')) {
+                    fetch(secureKmzUrl).then(res => res.text()).then(kmlText => renderFixedKML(kmlText)).catch(err => showError(err.message));
+                }
+            });
         }
     </script>
 </body>
