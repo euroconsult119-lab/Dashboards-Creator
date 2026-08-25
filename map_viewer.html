@@ -2,18 +2,29 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>KMZ Secure Viewer</title>
+    <title>KMZ Viewer</title>
+    
+    <!-- استدعاء ملفات التنسيق -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
-        html, body, #map { height: 100%; margin: 0; padding: 0; font-family: sans-serif; background-color: #f8fafc; }
-        #error-box { display: none; position: absolute; top: 10px; left: 10px; right: 10px; background: rgba(223, 44, 47, 0.9); color: white; padding: 15px; z-index: 9999; text-align: center; border-radius: 8px; font-weight: bold; direction: rtl; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        html, body, #map { height: 100%; margin: 0; padding: 0; background-color: #f8fafc; }
+        /* صندوق الأخطاء هيظهر بس لو فيه مشكلة */
+        #error-box { display: none; position: absolute; top: 0; left: 0; right: 0; background: #df2c2f; color: white; padding: 10px; z-index: 9999; text-align: center; font-family: sans-serif; font-weight: bold; direction: rtl; }
     </style>
+
+    <!-- مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+    
+    <!-- صندوق عرض الأخطاء -->
     <div id="error-box"></div>
+    
+    <!-- الخريطة -->
     <div id="map"></div>
 
+    <!-- استدعاء مكتبات الخرائط -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
     <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
@@ -21,76 +32,84 @@
 
     <script>
         function showError(msg) {
-            var box = document.getElementById('error-box');
-            box.style.display = 'block'; box.innerHTML += msg + '<br><br>';
+            document.getElementById('error-box').style.display = 'block';
+            document.getElementById('error-box').innerHTML += msg + '<br>';
         }
 
+        // 1. رسم الخريطة الأساسية فوراً (لضمان عدم ظهور شاشة بيضاء)
         var map = L.map('map').setView([21.4225, 39.8261], 12);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri'
         }).addTo(map);
 
         // ========================================================
-        // ضع المفاتيح هنا (بين علامات التنصيص)
+        // 2. ضع المفاتيح هنا (حافظ على علامات التنصيص ' ')
         // ========================================================
         const SUPABASE_URL = 'https://rescepzzyzjzvddfxygp.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable__zQ1jKceZqBbA3UxNQkIoQ_Oyf6tJe9';
-        const BUCKET_NAME = 'Camps_KMZ'; // الاسم الدقيق بالكابيتال والسمول
+        const BUCKET_NAME = 'Camps_KMZ';
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        var urlParams = new URLSearchParams(window.location.search);
-        var fileName = urlParams.get('file');
+        if (SUPABASE_URL.includes("ضع_رابط")) {
+            showError("تنبيه: لم تقم بإضافة روابط سوبابيز داخل الكود.");
+        } else {
+            // 3. الاتصال بسوبابيز وجلب الخريطة
+            try {
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                var urlParams = new URLSearchParams(window.location.search);
+                var fileName = urlParams.get('file');
 
-        if (fileName) {
-            fileName = fileName.trim();
-            if (!fileName.toLowerCase().endsWith('.kmz') && !fileName.toLowerCase().endsWith('.kml')) {
-                fileName += '.kmz';
-            }
+                if (fileName) {
+                    fileName = fileName.trim();
+                    
+                    // إضافة .kmz تلقائياً
+                    if (!fileName.toLowerCase().endsWith('.kmz') && !fileName.toLowerCase().endsWith('.kml')) {
+                        fileName += '.kmz';
+                    }
 
-            // توليد رابط مؤقت آمن لمدة 60 ثانية فقط
-            supabase.storage.from(BUCKET_NAME).createSignedUrl(fileName, 60).then(function(response) {
-                if (response.error) {
-                    showError("لا يمكن الوصول للملف، تأكد من وجوده باسم: " + fileName);
-                    return;
-                }
-                
-                var secureKmzUrl = response.data.signedUrl;
-                var lowerFileName = fileName.toLowerCase();
+                    // الحصول على الرابط السريع (Public URL)
+                    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
+                    var publicUrl = data.publicUrl;
 
-                function renderFixedKML(kmlText) {
-                    var fixedKmlText = kmlText.replace(/<LinearRing>/g, '<Polygon><outerBoundaryIs><LinearRing>')
-                                              .replace(/<\/LinearRing>/g, '</LinearRing></outerBoundaryIs></Polygon>');
-                    var customLayer = L.geoJson(null, { style: function () { return { color: '#0055ff', weight: 3, opacity: 1, fillOpacity: 0.3 }; } });
-                    customLayer.on('layeradd', function() { 
-                        var bounds = customLayer.getBounds();
-                        if (bounds && bounds.isValid()) map.fitBounds(bounds);
-                    });
-                    omnivore.kml.parse(fixedKmlText, null, customLayer).on('ready', function() { 
-                        setTimeout(function(){ var bounds = customLayer.getBounds(); if(bounds.isValid()) map.fitBounds(bounds); }, 300); 
-                    }).addTo(map);
-                }
+                    // دالة معالجة الملفات المعقدة
+                    function renderFixedKML(kmlText) {
+                        var fixedKmlText = kmlText.replace(/<LinearRing>/g, '<Polygon><outerBoundaryIs><LinearRing>')
+                                                  .replace(/<\/LinearRing>/g, '</LinearRing></outerBoundaryIs></Polygon>');
+                        var customLayer = L.geoJson(null, { style: function () { return { color: '#0055ff', weight: 3, opacity: 1, fillOpacity: 0.3 }; } });
+                        customLayer.on('layeradd', function() { 
+                            var bounds = customLayer.getBounds();
+                            if (bounds && bounds.isValid()) map.fitBounds(bounds);
+                        });
+                        omnivore.kml.parse(fixedKmlText, null, customLayer).on('ready', function() { 
+                            setTimeout(function(){ var b = customLayer.getBounds(); if(b.isValid()) map.fitBounds(b); }, 300); 
+                        }).addTo(map);
+                    }
 
-                if (lowerFileName.endsWith('.kmz')) {
+                    // تحميل الـ KMZ
                     var kmz = L.kmzLayer().addTo(map);
                     kmz.on('load', function(e) {
                         var bounds = e.layer.getBounds();
                         if (bounds && bounds.isValid() && Object.keys(e.layer._layers).length > 0) {
                             map.fitBounds(bounds);
-                        } else { fixAndLoadKMZ(secureKmzUrl); }
+                        } else {
+                            fixAndLoadKMZ(publicUrl);
+                        }
                     });
-                    kmz.on('error', function() { fixAndLoadKMZ(secureKmzUrl); });
-                    kmz.load(secureKmzUrl);
+                    kmz.on('error', function() { fixAndLoadKMZ(publicUrl); });
+                    kmz.load(publicUrl);
 
                     function fixAndLoadKMZ(url) {
-                        fetch(url).then(res => res.arrayBuffer()).then(buffer => JSZip.loadAsync(buffer)).then(zip => {
+                        fetch(url).then(res => {
+                            if(!res.ok) throw new Error("عذراً، الملف غير موجود في سوبابيز. تأكد من رفع الملف باسم: " + fileName);
+                            return res.arrayBuffer();
+                        }).then(buffer => JSZip.loadAsync(buffer)).then(zip => {
                             var kmlFilename = Object.keys(zip.files).find(name => name.toLowerCase().endsWith('.kml'));
                             if (kmlFilename) return zip.files[kmlFilename].async("string");
                         }).then(kmlText => { if (kmlText) renderFixedKML(kmlText); }).catch(err => showError(err.message));
                     }
-                } else if (lowerFileName.endsWith('.kml')) {
-                    fetch(secureKmzUrl).then(res => res.text()).then(kmlText => renderFixedKML(kmlText)).catch(err => showError(err.message));
                 }
-            });
+            } catch (e) {
+                showError("خطأ في الاتصال: " + e.message);
+            }
         }
     </script>
 </body>
