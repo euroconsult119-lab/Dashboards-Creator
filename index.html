@@ -1562,7 +1562,7 @@
             document.getElementById("val-pilgrims-input").value = currentCampData.pilgrimsCount;
             document.getElementById("val-allocated-input").value = currentCampData.allocatedPilgrims;
             document.getElementById("val-companiesCount").textContent = formatNumber(currentCampData.companiesCount || (isExternal ? (currentCampData.countryNames.length || 1) : currentCampData.companies.length));
-
+            document.getElementById("cardCountTitle").textContent = isExternal ? "عدد الدول" : "عدد الشركات";
             const titleCard2 = document.getElementById("title-card2");
             const valHousingInputContainer = document.getElementById("val-housingArea-input-container");
             const valHousingInput = document.getElementById("val-housingArea-input");
