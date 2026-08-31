@@ -1081,11 +1081,23 @@
         
         function closeAdminModal() { document.getElementById('adminModal').classList.add('hidden'); resetUserForm(); }
         function renderUsersTable() {
-            const tbody = document.getElementById('usersTableBody'); tbody.innerHTML = '';
-            adminUsersCache.forEach(u => {
-                tbody.innerHTML += `<tr><td class="p-3 font-bold">${u.username}</td><td class="p-3">${u.role}</td><td class="p-3">${u.sector}</td><td class="p-3">${u.refName}</td><td class="p-3 text-center"><button onclick="editUser(${u.rowNumber})" class="text-blue-500 hover:text-blue-700 ml-3">تعديل</button><button onclick="deleteUser(${u.rowNumber})" class="text-red-500 hover:text-red-700">حذف</button></td></tr>`;
-            });
-        }
+    const tbody = document.getElementById('usersTableBody'); 
+    tbody.innerHTML = '';
+    adminUsersCache.forEach(u => {
+        tbody.innerHTML += `
+            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                <td class="p-3 font-bold">${u.username}</td>
+                <td class="p-3">${u.role}</td>
+                <td class="p-3">${u.sector}</td>
+                <td class="p-3">${u.refName}</td>
+                <td class="p-3 text-center">
+                    <button onclick="editUser('${u.rowNumber}')" class="text-blue-500 hover:text-blue-700 ml-3 font-bold">تعديل</button>
+                    <button onclick="deleteUser('${u.rowNumber}')" class="text-red-500 hover:text-red-700 font-bold">حذف</button>
+                </td>
+            </tr>
+        `;
+    });
+}
         function editUser(rowNum) {
             const u = adminUsersCache.find(x => x.rowNumber === rowNum); if(!u) return;
             document.getElementById('userFormTitle').textContent = "تعديل مستخدم"; document.getElementById('editRowNumber').value = u.rowNumber; document.getElementById('addUsername').value = u.username; document.getElementById('addPassword').value = u.password; document.getElementById('addRole').value = u.role; document.getElementById('addSector').value = u.sector; document.getElementById('addRefName').value = u.refName;
