@@ -1401,29 +1401,45 @@
             applyFilters();
         }
 
-        function populateAdminFilters() {
-            const comList = document.getElementById('optionsCompany'); comList.innerHTML = '';
-            const counList = document.getElementById('optionsCountry'); counList.innerHTML = '';
-            
-            comList.innerHTML += `<li class="company-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-green dark:text-white" onclick="selectAdminFilter('Company', 'all', 'كل الشركات / الجهات')">كل الشركات / الجهات</li>`;
-            counList.innerHTML += `<li class="country-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-gold dark:text-white" onclick="selectAdminFilter('Country', 'all', 'كل الدول')">كل الدول</li>`;
-            
-            let comps = new Set(), couns = new Set();
-            dashboardData.forEach(d => {
-                if(isExternal){ if(d.companyName && d.companyName !== 'غير متوفر') comps.add(d.companyName); d.countryNames.forEach(x=>couns.add(x)); }
-                else { d.companies.forEach(x=>{if(x.name && x.name !== 'غير متوفر') comps.add(x.name);}); }
-            });
-            
-            [...comps].sort().forEach(c => {
-                comList.innerHTML += `<li class="company-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-green dark:text-white" onclick="selectAdminFilter('Company', '${c}', '${c}')">${c}</li>`;
-            });
-            [...couns].sort().forEach(c => {
-                counList.innerHTML += `<li class="country-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-gold dark:text-white" onclick="selectAdminFilter('Country', '${c}', '${c}')">${c}</li>`;
-            });
-            
-            document.getElementById('countryFilterContainer').style.display = isExternal ? 'block' : 'none';
-        }
+       function populateAdminFilters() {
+    const comList = document.getElementById('optionsCompany'); comList.innerHTML = '';
+    const counList = document.getElementById('optionsCountry'); counList.innerHTML = '';
+    
+    comList.innerHTML += `<li class="company-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-green dark:text-white" onclick="selectAdminFilter('Company', 'all', 'كل الشركات / الجهات')">كل الشركات / الجهات</li>`;
+    counList.innerHTML += `<li class="country-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-gold dark:text-white" onclick="selectAdminFilter('Country', 'all', 'كل الدول')">كل الدول</li>`;
+    
+    let comps = new Set(), couns = new Set();
+    
+    // جلب القيم المختارة حالياً في الفلاتر
+    const compEl = document.getElementById('filterCompany');
+    const counEl = document.getElementById('filterCountry');
+    const selComp = compEl ? compEl.value : 'all';
+    const selCoun = counEl ? counEl.value : 'all';
 
+    dashboardData.forEach(d => {
+        if(isExternal){ 
+            // للشركات: نعرض فقط الشركات اللي بتخدم الدولة المختارة (ولو مختار "الكل" يعرض كله)
+            let matchCoun = (selCoun === 'all' || d.countryNames.includes(selCoun));
+            if(matchCoun && d.companyName && d.companyName !== 'غير متوفر') comps.add(d.companyName); 
+            
+            // للدول: نعرض فقط الدول التابعة للشركة المختارة (ولو مختار "الكل" يعرض كله)
+            let matchComp = (selComp === 'all' || d.companyName === selComp);
+            if(matchComp) d.countryNames.forEach(x=>couns.add(x)); 
+        }
+        else { 
+            d.companies.forEach(x=>{if(x.name && x.name !== 'غير متوفر') comps.add(x.name);}); 
+        }
+    });
+    
+    [...comps].sort().forEach(c => {
+        comList.innerHTML += `<li class="company-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-green dark:text-white" onclick="selectAdminFilter('Company', '${c}', '${c}')">${c}</li>`;
+    });
+    [...couns].sort().forEach(c => {
+        counList.innerHTML += `<li class="country-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-gold dark:text-white" onclick="selectAdminFilter('Country', '${c}', '${c}')">${c}</li>`;
+    });
+    
+    document.getElementById('countryFilterContainer').style.display = isExternal ? 'block' : 'none';
+}
         function toggleAdminDropdown(type) {
             document.getElementById(`dropdown${type}List`).classList.toggle('hidden');
             document.getElementById(`search${type}`).focus();
@@ -1437,11 +1453,13 @@
         }
 
         function selectAdminFilter(type, val, displayVal) {
-            document.getElementById(`filter${type}`).value = val;
-            document.getElementById(`filter${type}Display`).value = displayVal;
-            document.getElementById(`dropdown${type}List`).classList.add('hidden');
-            applyFilters();
-        }
+    document.getElementById(`filter${type}`).value = val;
+    document.getElementById(`filter${type}Display`).value = displayVal;
+    document.getElementById(`dropdown${type}List`).classList.add('hidden');
+    
+    applyFilters();
+    populateAdminFilters(); // السطر ده جديد علشان يفلتر القائمة التانية ديناميكياً
+}
 
         function resetAdminFilters() {
             selectAdminFilter('Company', 'all', 'كل الشركات / الجهات');
