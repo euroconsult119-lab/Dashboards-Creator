@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المنصة الذكية - تخصيص مواقع الإسكان</title>
+    
+    <!-- خطوط جوجل -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            gold: '#c79a55',
+                            goldHover: '#b58a48',
+                            goldLight: '#fbf9f4',
+                            goldDark: '#1e1b15',
+                            green: '#196d5a',
+                            greenDark: '#125243',
+                            bg: '#f8fafc',
+                            bgDark: '#0f172a',
+                            cardDark: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Tajawal', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- المكتبات الأساسية للبيانات والتصدير -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <!-- مكتبة Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { 
+            transition: background-color 0.3s ease;
+            background-image: radial-gradient(rgba(200,200,200,0.2) 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow-x: hidden;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c79a55; border-radius: 10px; }
+        
+        .glass-card {
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: all 0.3s ease;
+        }
+        .dark .glass-card { border-color: rgba(51, 65, 85, 0.8); }
+        .glass-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.1); border-color: #c79a55; }
+
+        .editable-input {
+            background: transparent;
+            border: 2px dashed transparent;
+            outline: none;
+            transition: all 0.3s;
+            max-width: 100%;
+            border-radius: 8px;
+        }
+        .editable-input:hover { border-color: #c79a55; background: rgba(255,255,255,0.8); cursor: text; }
+        .dark .editable-input:hover { background: rgba(0,0,0,0.4); border-color: #c79a55;}
+        .editable-input:focus { border-color: #196d5a; border-style: solid; background: #fff; color: #196d5a; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        @media print {
+            @page { size: A4 landscape; margin: 10mm; }
+            body, html { background: #ffffff !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; overflow-x: hidden !important; }
+            main.container { max-width: 100% !important; width: 100% !important; padding: 0 5mm !important; margin: 0 !important; }
+            header, #loginSection, #selectionSection, #sheetsNavbar, #exportToolbar, #adminFilters, #campSelectionUI, #campSelectPlaceholder, #toastContainer, #chatWidget, .no-print { display: none !important; }
+            #dashboardSection, #printableDashboard, #dataContainer { display: block !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            #exportLogos { display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; margin: 0 0 10mm 0 !important; padding: 0 5mm 5mm 5mm !important; border-bottom: 3px solid #c79a55 !important; page-break-after: avoid !important; }
+            #exportLogos img { height: 50px !important; width: auto !important; max-width: 180px !important; object-fit: contain !important; }
+            .print-header-text { text-align: center !important; flex-grow: 1 !important; padding: 0 10px !important; }
+            .print-header-text h1 { font-size: 16pt !important; color: #c79a55 !important; margin: 0 0 5px 0 !important; white-space: normal !important; }
+            .print-header-text h2 { font-size: 14pt !important; color: #196d5a !important; margin: 0 !important; white-space: normal !important; }
+            #mainTitle { display: none !important; }
+            .print-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; width: 100% !important; margin: 0 0 10mm 0 !important; }
+            .glass-card { border: 2px solid #e2e8f0 !important; box-shadow: none !important; background-color: #ffffff !important; break-inside: avoid !important; page-break-inside: avoid !important; border-radius: 8px !important; padding: 0 !important; }
+            .glass-card > div.bg-brand-gold { font-size: 10pt !important; padding: 6px !important; }
+            .glass-card .p-6 { padding: 8px !important; }
+            input[type="number"], input[type="text"] { font-size: 18pt !important; line-height: 1 !important; border: none !important; background: transparent !important; color: #196d5a !important; text-align: center !important; font-weight: 900 !important; width: 100% !important; height: auto !important; padding: 0 !important; margin: 0 !important; -webkit-appearance: none !important; }
+            span.text-base, span.text-lg, span.text-xl { font-size: 10pt !important; }
+            .glass-card.relative.min-h-\[250px\] { min-height: 140px !important; }
+            #doughnutCanvas { max-height: 120px !important; width: auto !important; margin: 0 auto !important; }
+            #mapPrintSection { page-break-before: always !important; break-before: page !important; width: 100% !important; display: block !important; margin: 0 !important; padding: 10px !important; border: none !important; }
+            #mapContainerWrap { height: 16cm !important; width: 100% !important; border: 3px solid #c79a55 !important; border-radius: 12px !important; margin: 0 auto !important; }
+        }
+    </style>
+</head>
+<body class="bg-brand-bg dark:bg-brand-bgDark text-gray-800 dark:text-gray-100 min-h-screen flex flex-col font-sans relative">
+
+    <div id="toastContainer" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-3 w-full max-w-md px-4 pointer-events-none"></div>
+
+    <!-- نافذة إدارة المستخدمين للإدمن -->
+    <div id="adminModal" class="hidden fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-brand-cardDark rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+                <h2 class="text-2xl font-black text-brand-green dark:text-brand-gold">لوحة تحكم المستخدمين</h2>
+                <button onclick="closeAdminModal()" class="text-gray-500 hover:text-red-500 transition-colors">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-6 flex-grow overflow-y-auto">
+                <div class="bg-gray-50 dark:bg-slate-800 p-4 rounded-xl mb-6 border border-gray-200 dark:border-slate-700">
+                    <h3 class="font-bold text-lg mb-4 text-brand-green dark:text-white" id="userFormTitle">إضافة مستخدم جديد</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <input type="hidden" id="editRowNumber">
+                        <input type="text" id="addUsername" placeholder="اسم المستخدم" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:outline-none focus:border-brand-gold">
+                        <input type="text" id="addPassword" placeholder="كلمة المرور" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:outline-none focus:border-brand-gold">
+                        <select id="addRole" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:outline-none focus:border-brand-gold">
+                            <option value="user">يوزر شركة (User)</option>
+                            <option value="admin">إدارة (Admin)</option>
+                        </select>
+                        <select id="addSector" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:outline-none focus:border-brand-gold">
+                            <option value="الكل">الكل</option>
+                            <option value="الداخل">الداخل</option>
+                            <option value="الخارج">الخارج</option>
+                        </select>
+                        <input type="text" id="addRefName" placeholder="الاسم المرجعي للشركة (أو الكل للإدمن)" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:outline-none focus:border-brand-gold">
+                        <div class="flex gap-2">
+                            <button onclick="saveUser()" class="flex-1 bg-brand-green hover:bg-brand-greenDark text-white rounded-lg font-bold py-2 transition-colors">حفظ</button>
+                            <button onclick="closeAdminModal()" class="px-4 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg font-bold py-2 transition-colors">إلغاء</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
+                    <table class="w-full text-right border-collapse whitespace-nowrap">
+                        <thead class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300">
+                            <tr><th class="p-3 font-bold">اسم المستخدم</th><th class="p-3 font-bold">الرتبة</th><th class="p-3 font-bold">القطاع</th><th class="p-3 font-bold">الشركة المرجعية</th><th class="p-3 font-bold text-center">إجراءات</th></tr>
+                        </thead>
+                        <tbody id="usersTableBody" class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الهيدر الرئيسي المتجاوب وأزرار الموبايل -->
+    <header class="bg-white dark:bg-brand-cardDark shadow-sm relative z-20 border-b-[3px] border-brand-gold no-print transition-colors duration-300">
+        <div class="container mx-auto px-4 sm:px-6 md:px-8 py-3 flex flex-wrap items-center justify-between gap-3 relative">
+            <div class="flex items-center justify-center gap-4 sm:gap-6 bg-white dark:bg-slate-800 px-4 py-1.5 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 w-auto">
+                <img id="logoEC" class="h-8 sm:h-12 object-contain filter dark:brightness-0 dark:invert" alt="شعار الشركة">
+                <div class="w-[2px] h-7 sm:h-10 bg-gray-200 dark:bg-slate-600 rounded-full"></div>
+                <img id="logoMin" class="h-8 sm:h-12 object-contain filter dark:brightness-0 dark:invert" alt="وزارة الحج والعمرة">
+            </div>
+            
+            <!-- زر قائمة الموبايل -->
+            <button onclick="toggleMobileMenu()" class="sm:hidden p-2 rounded-xl bg-gray-100 dark:bg-slate-700 text-brand-gold border border-brand-gold/30">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+
+            <!-- الأزرار العلوية المفرودة -->
+            <div id="headerButtons" class="hidden sm:flex flex-col sm:flex-row w-full sm:w-auto items-center gap-3 absolute sm:relative top-full left-0 right-0 sm:top-auto bg-white sm:bg-transparent dark:bg-brand-cardDark sm:dark:bg-transparent p-4 sm:p-0 shadow-lg sm:shadow-none border-b sm:border-none z-50 mt-2 sm:mt-0 rounded-b-2xl sm:rounded-none">
+                
+                <!-- زر المرفقات الجديد (يظهر للإدمن فقط) -->
+                <button id="adminFilesBtn" onclick="openAdminFilesModal()" class="hidden w-full sm:w-auto flex-row justify-center items-center gap-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-white border border-gray-200 dark:border-slate-600 px-5 py-2.5 rounded-xl font-bold shadow-md transition-all text-sm sm:text-base">
+                    <svg class="w-5 h-5 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path></svg>
+                    المرفقات
+                </button>
+
+                <button id="uploadNewBtn" onclick="resetApp()" class="hidden w-full sm:w-auto flex-row justify-center items-center gap-2 bg-[#c79a55] hover:bg-[#b58a48] text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all text-sm sm:text-base">
+                    العودة للخيارات
+                </button>
+                
+                <button id="logoutBtn" onclick="logout()" class="hidden w-full sm:w-auto flex-row justify-center items-center gap-2 bg-[#df2c2f] hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all text-sm sm:text-base">
+                    تسجيل الخروج
+                </button>
+
+                <button id="adminPanelBtn" onclick="openAdminModal()" class="hidden w-full sm:w-auto flex-row justify-center items-center gap-2 bg-[#1e293b] hover:bg-slate-900 dark:bg-brand-gold dark:hover:bg-brand-goldHover text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all text-sm sm:text-base">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    الإدارة
+                </button>
+
+                <!-- الإشعارات -->
+                <div class="relative w-full sm:w-auto order-first sm:order-none mb-2 sm:mb-0 hidden" id="notificationBtnContainer">
+                    <button onclick="toggleNotifications()" class="w-full sm:w-auto p-2.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-brand-gold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors shadow-sm border border-gray-200 dark:border-slate-600 relative" title="الإشعارات">
+                        <svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <span id="notifBadge" class="hidden absolute top-1 right-2 sm:right-1 w-3 h-3 bg-red-500 border-2 border-white dark:border-slate-700 rounded-full"></span>
+                    </button>
+                    <!-- قائمة الإشعارات -->
+                    <div id="notifDropdown" class="hidden absolute top-full mt-2 left-0 sm:right-0 sm:left-auto w-80 bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl shadow-2xl z-[100] overflow-hidden text-right">
+                        <div class="p-3 bg-brand-gold text-white font-bold flex justify-between items-center">
+                            <span id="notifCount" class="text-xs bg-white text-brand-gold px-2 py-0.5 rounded-full font-black">0</span>
+                            <span>الإشعارات</span>
+                        </div>
+                        <div id="notifList" class="max-h-64 overflow-y-auto p-2 space-y-2 flex flex-col">
+                            <div class="text-center text-sm text-gray-500 dark:text-gray-400 p-4 font-bold">لا توجد إشعارات جديدة</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="toggleDarkMode()" class="w-full sm:w-auto p-2.5 rounded-xl bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-brand-gold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors shadow-sm border border-gray-200 dark:border-slate-600" title="الوضع الليلي / النهاري">
+                    <svg id="moonIcon" class="w-6 h-6 mx-auto hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="sunIcon" class="w-6 h-6 mx-auto block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-3 sm:px-6 md:px-8 py-6 flex-grow relative z-10">
+        
+        <!-- 1. شاشة تسجيل الدخول -->
+        <div id="loginSection" class="glass-card bg-white dark:bg-brand-cardDark rounded-3xl p-6 sm:p-10 md:p-12 text-center max-w-md mx-auto mt-6 sm:mt-10 shadow-xl">
+            <div class="w-20 h-20 bg-brand-goldLight dark:bg-brand-goldDark rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-brand-gold">
+                <svg class="w-10 h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black text-brand-green dark:text-brand-gold mb-2">تسجيل الدخول</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-8 font-medium text-sm sm:text-base">الرجاء إدخال بيانات الدخول للوصول للمنصة</p>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-5 text-right">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">اسم المستخدم:</label>
+                    <input type="text" id="usernameInput" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-white focus:border-brand-gold focus:outline-none transition-colors font-bold" placeholder="أدخل اسم المستخدم">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">كلمة المرور:</label>
+                    <input type="password" id="passwordInput" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-white focus:border-brand-gold focus:outline-none transition-colors font-bold" placeholder="••••••••">
+                </div>
+                <button type="submit" class="w-full py-4 text-lg sm:text-xl font-bold rounded-xl text-white bg-brand-green hover:bg-brand-greenDark transition-all shadow-lg">
+                    دخول للمنصة
+                </button>
+            </form>
+        </div>
+
+        <!-- 2. شاشة اختيار المنصة (حجاج الداخل / الخارج) -->
+        <div id="selectionSection" class="hidden glass-card bg-white dark:bg-brand-cardDark rounded-3xl p-5 sm:p-8 md:p-12 text-center max-w-5xl mx-auto mt-4 sm:mt-6">
+            <h2 class="text-xl sm:text-3xl md:text-4xl font-black text-brand-green dark:text-brand-gold mb-4">تخصيص مواقع إسكان حجاج مشعر عرفات لموسم حج 1447 هـ</h2>
+            
+            <div class="inline-flex flex-col sm:flex-row flex-wrap justify-center items-center gap-2 sm:gap-6 bg-brand-goldLight dark:bg-slate-800 border-2 border-brand-gold/40 px-4 sm:px-6 py-2.5 rounded-2xl text-sm sm:text-lg font-black text-brand-green dark:text-brand-gold mb-8 shadow-sm">
+                <span class="dark:text-white">إجمالي عدد المخيمات الكلي: <span class="text-brand-gold font-black">646</span> مخيم</span>
+                <span class="hidden sm:inline text-gray-300 dark:text-slate-600">|</span>
+                <span class="dark:text-white">إجمالي عدد الحجاج الكلي: <span class="text-brand-gold font-black">1,744,698</span> حاج</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8" id="sectorCardsGrid">
+                <!-- كارت حجاج الداخل -->
+                <div id="card-internal" class="p-6 sm:p-8 rounded-3xl border-2 border-brand-green/30 hover:border-brand-green bg-brand-goldLight dark:bg-slate-800 transition-all shadow-md hover:shadow-2xl flex flex-col items-center justify-between gap-6">
+                    <button onclick="loadGoogleSheet('internal')" class="w-full group flex flex-col items-center justify-center gap-4">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 bg-brand-green text-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+<svg id="fi_4448524_int" class="w-10 h-10 sm:w-12 sm:h-12 fill-current text-white" height="512" viewBox="0 0 48 48" width="512 xmlns="http://www.w3.org/2000/svg" data-name="Layer 16"><path fill="#ffffff" d="m36.7 24.134a28.161 28.161 0 0 0 -8.53-3.67 13.463 13.463 0 0 0 4.83-9.75 8.871 8.871 0 0 0 -9-8.714 8.871 8.871 0 0 0 -9 8.714 13.463 13.463 0 0 0 4.827 9.749 28.161 28.161 0 0 0 -8.53 3.67 6.806 6.806 0 0 0 -3.297 5.867v15a1 1 0 0 0 1 1h30a1 1 0 0 0 1-1v-14.922a6.967 6.967 0 0 0 -3.3-5.944zm-12.7-20.134a7.023 7.023 0 0 1 6.4 4h-12.8a7.023 7.023 0 0 1 6.4-4zm-7 6.714a6.472 6.472 0 0 1 .041-.714h13.918a6.472 6.472 0 0 1 .041.714c0 3.667-3.136 9.286-7 9.286s-7-5.619-7-9.286zm-7 19.286a4.819 4.819 0 0 1 2.294-4.128c.661 1.428 2.817 5.528 6.306 7.045a1 1 0 0 0 .8-1.834c-2.968-1.29-4.9-5.2-5.364-6.214q.8-.434 1.537-.786c1.536 1.942 7.61 8.989 16.428 11.652v8.265h-22.001zm28 14h-4v-11a1 1 0 0 0 -2 0v.64c-7.34-2.432-12.7-8.211-14.516-10.384a17.267 17.267 0 0 1 6.516-1.256c2.634 0 6.081.457 11.666 3.844a4.957 4.957 0 0 1 2.334 4.234z"></path></svg>                         </div>
+                        <span class="text-2xl sm:text-3xl font-black text-brand-green dark:text-white">حجاج الداخل</span>
+                        <span class="text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-200">بيانات التخصيص والمساحات لحجاج الداخل</span>
+                    </button>
+                    <!-- شارتات النسبة للداخل -->
+                    <div class="grid grid-cols-2 gap-3 sm:gap-4 w-full border-t border-gray-200 dark:border-slate-700 pt-4">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="h-24 w-24 sm:h-28 sm:w-28 relative"><canvas id="selIntCampsCanvas"></canvas></div>
+                            <span class="text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-100 mt-2">نسبة المخيمات من الإجمالي</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="h-24 w-24 sm:h-28 sm:w-28 relative"><canvas id="selIntPilgrimsCanvas"></canvas></div>
+                            <span class="text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-100 mt-2">نسبة الحجاج من الإجمالي</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- كارت حجاج الخارج -->
+                <div id="card-external" class="p-6 sm:p-8 rounded-3xl border-2 border-brand-gold/30 hover:border-brand-gold bg-brand-goldLight dark:bg-slate-800 transition-all shadow-md hover:shadow-2xl flex flex-col items-center justify-between gap-6">
+                    <button onclick="loadGoogleSheet('external')" class="w-full group flex flex-col items-center justify-center gap-4">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 bg-brand-gold text-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+<svg id="fi_4448524_int" class="w-10 h-10 sm:w-12 sm:h-12 fill-current text-white" height="512" viewBox="0 0 48 48" width="512 xmlns="http://www.w3.org/2000/svg" data-name="Layer 16"><path fill="#ffffff" d="m36.7 24.134a28.161 28.161 0 0 0 -8.53-3.67 13.463 13.463 0 0 0 4.83-9.75 8.871 8.871 0 0 0 -9-8.714 8.871 8.871 0 0 0 -9 8.714 13.463 13.463 0 0 0 4.827 9.749 28.161 28.161 0 0 0 -8.53 3.67 6.806 6.806 0 0 0 -3.297 5.867v15a1 1 0 0 0 1 1h30a1 1 0 0 0 1-1v-14.922a6.967 6.967 0 0 0 -3.3-5.944zm-12.7-20.134a7.023 7.023 0 0 1 6.4 4h-12.8a7.023 7.023 0 0 1 6.4-4zm-7 6.714a6.472 6.472 0 0 1 .041-.714h13.918a6.472 6.472 0 0 1 .041.714c0 3.667-3.136 9.286-7 9.286s-7-5.619-7-9.286zm-7 19.286a4.819 4.819 0 0 1 2.294-4.128c.661 1.428 2.817 5.528 6.306 7.045a1 1 0 0 0 .8-1.834c-2.968-1.29-4.9-5.2-5.364-6.214q.8-.434 1.537-.786c1.536 1.942 7.61 8.989 16.428 11.652v8.265h-22.001zm28 14h-4v-11a1 1 0 0 0 -2 0v.64c-7.34-2.432-12.7-8.211-14.516-10.384a17.267 17.267 0 0 1 6.516-1.256c2.634 0 6.081.457 11.666 3.844a4.957 4.957 0 0 1 2.334 4.234z"></path></svg>                         </div>
+                        <span class="text-2xl sm:text-3xl font-black text-brand-gold dark:text-brand-gold">حجاج الخارج</span>
+                        <span class="text-xs sm:text-sm font-bold text-gray-600 dark:text-gray-200">بيانات التخصيص والدول لحجاج الخارج</span>
+                    </button>
+                    <!-- شارتات النسبة للخارج -->
+                    <div class="grid grid-cols-2 gap-3 sm:gap-4 w-full border-t border-gray-200 dark:border-slate-700 pt-4">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="h-24 w-24 sm:h-28 sm:w-28 relative"><canvas id="selExtCampsCanvas"></canvas></div>
+                            <span class="text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-100 mt-2">نسبة المخيمات من الإجمالي</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="h-24 w-24 sm:h-28 sm:w-28 relative"><canvas id="selExtPilgrimsCanvas"></canvas></div>
+                            <span class="text-[11px] sm:text-xs font-bold text-gray-700 dark:text-gray-100 mt-2">نسبة الحجاج من الإجمالي</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
+                <button onclick="handleFileSelection()" class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-gray-500 hover:text-brand-gold transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    أو اختيار ملف إكسيل من جهازك
+                </button>
+                <input type="file" id="fallbackFileInput" accept=".xlsx" class="hidden" onchange="handleFallbackUpload(event)">
+            </div>
+        </div>
+
+        <!-- 3. شاشة الداشبورد وعرض البيانات -->
+        <div id="dashboardSection" class="hidden max-w-[1300px] mx-auto">
+            
+            <!-- أزرار التبويبات -->
+            <div id="sheetsNavbar" class="flex flex-col items-center gap-3 bg-white dark:bg-brand-cardDark shadow-md p-4 rounded-2xl mb-6 border border-gray-200 dark:border-slate-700 no-print transition-colors"></div>
+
+            <div id="exportToolbar" class="flex flex-col sm:flex-row flex-wrap justify-between items-stretch sm:items-center bg-white dark:bg-brand-cardDark shadow-sm p-4 rounded-xl mb-6 border border-gray-200 dark:border-slate-700 no-print gap-4 transition-colors">
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <button onclick="window.print()" class="flex-1 sm:flex-none justify-center bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-white hover:bg-gray-200 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors text-sm sm:text-base">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> طباعة
+                    </button>
+                    <button onclick="exportPDF()" class="flex-1 sm:flex-none justify-center bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors text-sm sm:text-base">
+                        تصدير PDF
+                    </button>
+                    <button onclick="exportPPTX()" class="flex-1 sm:flex-none justify-center bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-100 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors text-sm sm:text-base">
+                        تصدير PPTX
+                    </button>
+                </div>
+                <button id="saveChangesBtn" onclick="saveDataToFile()" class="hidden bg-brand-gold hover:bg-brand-goldHover text-white px-6 py-2.5 rounded-lg font-black flex justify-center items-center gap-2 transition-all shadow-md animate-pulse pointer-events-auto text-sm sm:text-base">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> حفظ التغيرات في الشيت
+                </button>
+            </div>
+
+            <div id="printableDashboard" class="bg-transparent rounded-3xl transition-all mx-auto pb-4">
+                
+                <!-- الهيدر الخاص بالطباعة -->
+                <div id="exportLogos" class="hidden w-full justify-between items-center mb-6 pb-4 border-b-2 border-brand-gold px-4">
+                    <img id="exportLogoEC" class="h-16 object-contain" alt="الشعار 1" crossorigin="anonymous">
+                    <div class="print-header-text">
+                        <h1 id="printMainTitle" class="text-2xl font-black text-brand-gold mb-2">تخصيص مواقع إسكان الحجاج بمشعر عرفات</h1>
+                        <h2 id="printCampTitle" class="text-xl font-black text-brand-green"></h2>
+                    </div>
+                    <img id="exportLogoMin" class="h-16 object-contain" alt="شعار وزارة الحج والعمرة" crossorigin="anonymous">
+                </div>
+
+                <div class="text-center relative mb-8 z-40 pt-2">
+                    <h2 id="mainTitle" class="text-xl sm:text-3xl md:text-4xl font-black text-brand-gold mb-3">تخصيص مواقع إسكان الحجاج بمشعر عرفات</h2>
+                
+                    <div class="flex flex-col items-center justify-center gap-4 relative w-full" id="campDropdownContainer">
+                        
+                        <!-- فلاتر التخصيص للإدارة -->
+                        <div id="adminFilters" class="hidden flex-wrap justify-center items-center gap-3 w-full max-w-4xl bg-white dark:bg-slate-800 p-3 rounded-xl border border-brand-gold/40 shadow-sm relative z-[60]">
+                            <span class="font-bold text-brand-green dark:text-brand-gold">فلاتر التخصيص للإدارة:</span>
+                            
+                            <div class="relative w-full sm:w-64">
+                                <input type="text" id="filterCompanyDisplay" class="w-full px-4 py-2 rounded-lg border bg-gray-50 dark:bg-slate-700 dark:text-white font-bold outline-none border-gray-200 dark:border-slate-600 focus:border-brand-green cursor-pointer text-center text-sm" value="كل الشركات / الجهات" readonly onclick="toggleAdminDropdown('Company')">
+                                <input type="hidden" id="filterCompany" value="all">
+                                <div id="dropdownCompanyList" class="hidden absolute top-full mt-1 left-0 right-0 bg-white dark:bg-slate-800 border-2 border-brand-green rounded-xl shadow-2xl max-h-60 overflow-y-auto pointer-events-auto">
+                                    <div class="p-2 sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700 shadow-sm z-10">
+                                        <input type="text" id="searchCompany" class="w-full bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 rounded-lg p-2 text-sm focus:outline-none focus:border-brand-green transition-colors" placeholder="ابحث عن شركة/جهة..." onkeyup="filterAdminList('Company')">
+                                    </div>
+                                    <ul id="optionsCompany" class="text-right text-sm font-bold"></ul>
+                                </div>
+                            </div>
+
+                            <div class="relative w-full sm:w-64" id="countryFilterContainer" style="display:none;">
+                                <input type="text" id="filterCountryDisplay" class="w-full px-4 py-2 rounded-lg border bg-gray-50 dark:bg-slate-700 dark:text-white font-bold outline-none border-gray-200 dark:border-slate-600 focus:border-brand-gold cursor-pointer text-center text-sm" value="كل الدول" readonly onclick="toggleAdminDropdown('Country')">
+                                <input type="hidden" id="filterCountry" value="all">
+                                <div id="dropdownCountryList" class="hidden absolute top-full mt-1 left-0 right-0 bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl shadow-2xl max-h-60 overflow-y-auto pointer-events-auto">
+                                    <div class="p-2 sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700 shadow-sm z-10">
+                                        <input type="text" id="searchCountry" class="w-full bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 rounded-lg p-2 text-sm focus:outline-none focus:border-brand-gold transition-colors" placeholder="ابحث عن دولة..." onkeyup="filterAdminList('Country')">
+                                    </div>
+                                    <ul id="optionsCountry" class="text-right text-sm font-bold"></ul>
+                                </div>
+                            </div>
+                            
+                            <button onclick="resetAdminFilters()" class="px-3 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg font-bold text-sm transition-colors" title="إلغاء الفلاتر">إلغاء الفلتر</button>
+                        </div>
+
+                        <!-- قائمة اختيار المخيم -->
+                        <div class="flex flex-col md:flex-row items-center justify-center gap-3 sm:gap-4 relative w-full" id="campSelectionUI">
+                            <span id="labelSelectCamp" class="text-lg sm:text-xl md:text-2xl font-black text-brand-green dark:text-brand-gold">اختر اسم المخيم :</span>
+                            <div class="relative w-full md:w-96 z-50">
+                                <input type="text" id="campSearchInput" class="w-full border-b-4 border-brand-green dark:border-brand-gold bg-brand-goldLight dark:bg-slate-800 rounded-t-xl p-3 text-lg sm:text-xl md:text-2xl font-black text-center text-brand-green dark:text-white cursor-pointer focus:outline-none transition-all shadow-sm pointer-events-auto" placeholder="اختر المخيم..." readonly onclick="toggleDropdown()">
+                                <div class="dropdown-arrow absolute left-5 top-1/2 transform -translate-y-1/2 text-brand-green dark:text-brand-gold pointer-events-none no-print no-export">
+                                    <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"></path></svg>
+                                </div>
+                                <div id="dropdownList" class="hidden absolute top-full left-0 right-0 bg-white dark:bg-slate-800 border-2 border-brand-green dark:border-brand-gold rounded-b-xl shadow-2xl max-h-80 overflow-y-auto no-print no-export pointer-events-auto">
+                                    <div class="p-3 sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700 shadow-sm z-10">
+                                        <input type="text" id="innerSearch" class="w-full bg-gray-50 dark:bg-slate-700 dark:text-white border border-gray-200 dark:border-slate-600 rounded-lg p-3 text-base sm:text-lg focus:outline-none focus:border-brand-green transition-colors pointer-events-auto" placeholder="ابحث..." onkeyup="filterCampsList()">
+                                    </div>
+                                    <ul id="campOptions" class="text-right text-base sm:text-lg font-bold pointer-events-auto"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- شاشة "إجمالي تخصيص اسكان الحجاج" -->
+                <div id="overviewContainer" class="hidden">
+                    <div id="overviewCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 print-grid gap-4 sm:gap-5 mb-8"></div>
+                    <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl p-4 sm:p-6 relative z-10 shadow-sm">
+                        <h3 id="overviewChartTitle" class="text-lg sm:text-xl font-black text-brand-green dark:text-brand-gold text-center mb-4 border-b border-gray-100 dark:border-slate-700 pb-3">
+                            توزيع المخيمات حسب التصنيف
+                        </h3>
+                        <div class="w-full h-[300px] sm:h-[380px] relative flex items-center justify-center">
+                            <canvas id="overviewCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- شاشة انتظار اختيار المخيم -->
+                <div id="campSelectPlaceholder" class="hidden glass-card bg-white dark:bg-brand-cardDark rounded-3xl p-8 sm:p-16 text-center my-6">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 bg-brand-goldLight dark:bg-brand-goldDark rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-brand-gold">
+                        <svg class="w-8 h-8 sm:w-10 sm:h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-black text-brand-green dark:text-brand-gold mb-2">يرجى اختيار اسم المخيم</h3>
+                    <p class="text-gray-500 dark:text-gray-400 font-medium text-sm sm:text-base">قم باختيار المخيم من القائمة المنسدلة بالأعلى لعرض بيانات التخصيص والحدود المساحية والجغرافية له</p>
+                </div>
+
+                <!-- بيانات المخيم المحدد -->
+                <div id="dataContainer" class="hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 print-grid gap-4 sm:gap-5 mb-6 relative z-10">
+                        <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
+                            <div class="bg-brand-gold text-white py-3 text-center font-bold text-base sm:text-lg">اجمالي مساحة المخيم الكلي</div>
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
+                                <div class="flex flex-row items-center justify-center gap-1 w-full text-center">
+                                    <input type="number" id="val-totalArea-input" class="text-3xl sm:text-4xl font-black text-brand-green dark:text-white bg-transparent border-0 outline-none text-center w-full p-0 m-0" value="0" readonly oninput="handleDataChange()">
+                                    <span class="text-base sm:text-lg font-bold text-gray-500 dark:text-gray-400">م²</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
+                            <div id="title-card2" class="bg-brand-gold text-white py-3 text-center font-bold text-base sm:text-lg">المساحة المخصصة للإسكان</div>
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
+                                <span id="val-housingArea-text" class="hidden text-xl sm:text-2xl font-black text-brand-green dark:text-white px-2 text-center leading-relaxed"></span>
+                                <div id="val-housingArea-input-container" class="flex items-baseline justify-center gap-1 text-center w-full">
+                                    <input type="number" id="val-housingArea-input" class="text-3xl sm:text-4xl font-black text-brand-green dark:text-white bg-transparent border-0 outline-none text-center w-full p-0 m-0" value="0" readonly oninput="handleDataChange()">
+                                    <span class="text-base sm:text-lg font-bold text-gray-500 dark:text-gray-400" id="unit-housingArea">م²</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
+                            <div class="bg-brand-gold text-white py-3 text-center font-bold text-base sm:text-lg">اجمالي مساحة التسكين الصافي 5 ف 5</div>
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
+                                <div class="flex flex-row items-center justify-center gap-1 w-full text-center">
+                                    <input type="number" id="val-tentArea-input" class="text-3xl sm:text-4xl font-black text-brand-green dark:text-white bg-transparent border-0 outline-none text-center w-full p-0 m-0" value="0" readonly oninput="handleDataChange()">
+                                    <span class="text-base sm:text-lg font-bold text-gray-500 dark:text-gray-400">م²</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
+                            <div class="bg-brand-gold text-white py-3 flex items-center justify-center gap-2 font-bold text-base sm:text-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> عدد الحجاج الاجمالي المتوقع
+                            </div>
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
+                                <div class="flex flex-row items-center justify-center gap-1 w-full text-center">
+                                    <input type="number" id="val-pilgrims-input" class="text-3xl sm:text-4xl font-black text-brand-green dark:text-white bg-transparent border-0 outline-none text-center w-full p-0 m-0" value="0" readonly oninput="handleDataChange()">
+                                    <span class="text-base sm:text-lg font-bold text-gray-500 dark:text-gray-400">حاج</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 print-grid gap-4 sm:gap-5 relative z-10 mb-6">
+                        <div class="glass-card bg-brand-goldLight dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden">
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow text-center">
+                                <div id="cardCountTitle" class="text-brand-gold font-bold text-lg sm:text-xl mb-4">عدد الشركات</div>
+                                <div class="text-brand-green dark:text-white font-black text-4xl sm:text-5xl" id="val-companiesCount">0</div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card bg-brand-goldLight dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden border-2 border-transparent focus-within:border-brand-green relative group">
+                            <div class="absolute top-2 left-2 text-gray-400 dark:text-gray-500 group-hover:text-brand-gold no-print no-export pointer-events-none" title="اضغط للتعديل">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </div>
+                            <div class="p-6 flex flex-col items-center justify-center flex-grow text-center">
+                                <div class="text-brand-gold font-bold text-lg sm:text-xl mb-4">إجمالي عدد الحجاج المخصص</div>
+                                <div class="flex flex-row items-center justify-center gap-1 w-full h-16 pointer-events-auto">
+                                    <input type="number" id="val-allocated-input" class="editable-input text-4xl sm:text-5xl font-black text-brand-green dark:text-white bg-transparent border-0 outline-none text-center w-full p-0 m-0" value="0" readonly oninput="handleDataChange()">
+                                    <span class="text-lg sm:text-xl font-bold text-gray-500 dark:text-gray-400 pt-3">حاج</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="companyDisplaySlot" class="glass-card bg-brand-goldLight dark:bg-brand-cardDark rounded-2xl flex flex-col justify-center p-3 gap-2"></div>
+
+                        <div class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl p-4 flex flex-col items-center justify-center relative min-h-[250px]">
+                            <div class="w-full flex-grow relative flex items-center justify-center h-full">
+                                <canvas id="doughnutCanvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قسم الخريطة يفصل في صفحة جديدة في الطباعة -->
+                    <div id="mapPrintSection" class="glass-card bg-white dark:bg-brand-cardDark rounded-2xl p-4 sm:p-6 relative z-10 shadow-sm mb-4">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4 border-b border-gray-100 dark:border-slate-700 pb-4">
+                            <h3 class="text-lg sm:text-xl font-black text-brand-green dark:text-brand-gold flex items-center gap-2 text-center md:text-right">
+                                <svg class="w-6 h-6 text-brand-gold hidden sm:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                الموقع الجغرافي والحدود المساحية
+                            </h3>
+                            
+                            <div class="flex items-center gap-3 flex-wrap justify-center">
+                                <a id="btnOpenGoogleMaps" target="_blank" href="#" class="hidden bg-brand-gold hover:bg-brand-goldHover text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold shadow-sm flex items-center gap-2 transition-all no-print pointer-events-auto text-sm sm:text-base">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                    فتح على جوجل ماب
+                                </a>
+                                <div id="coordsText" class="text-base sm:text-lg font-black bg-brand-goldLight dark:bg-slate-700 text-brand-green dark:text-brand-gold px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl border border-brand-gold/30 shadow-sm">
+                                    --
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full h-[300px] sm:h-[400px] rounded-xl overflow-hidden border-2 border-brand-gold/40 relative bg-gray-100 dark:bg-slate-800 pointer-events-auto z-10" id="mapContainerWrap">
+                            <div id="mapContainer" class="w-full h-full z-10"></div>
+                            <div id="mapFallback" class="hidden absolute inset-0 z-20 flex items-center justify-center text-lg sm:text-xl font-bold text-gray-500 bg-gray-50 dark:bg-slate-800 text-center px-4">
+                                عذراً.. لم يتم إرفاق إحداثيات أو خريطة مخصصة لهذا المخيم في ملف الإكسيل
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- شاشة نافذة "مرفقات الشركات" (تظهر للإدمن فقط) -->
+    <!-- ============================================== -->
+    <div id="adminFilesModal" class="hidden fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-brand-cardDark rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+                <h2 class="text-2xl font-black text-brand-green dark:text-brand-gold">مرفقات ومستندات الشركات</h2>
+                <button onclick="document.getElementById('adminFilesModal').classList.add('hidden')" class="text-gray-500 hover:text-red-500 text-xl font-black">✖</button>
+            </div>
+            <div class="p-6 flex-grow overflow-y-auto">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+                    <span class="text-sm font-bold text-gray-500 dark:text-gray-400">هنا يمكنك استعراض جميع الملفات المرسلة من الشركات وتحميلها أو تنظيفها لتوفير المساحة.</span>
+                    <button onclick="loadAllAdminFiles()" class="w-full sm:w-auto px-4 py-2 bg-brand-green hover:bg-brand-greenDark text-white rounded-lg font-bold text-sm transition-colors shadow-md">🔄 تحديث القائمة</button>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
+                    <table class="w-full text-right border-collapse whitespace-nowrap">
+                        <thead class="bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300">
+                            <tr>
+                                <th class="p-3 font-bold">الشركة الراسلة</th>
+                                <th class="p-3 font-bold">اسم الملف</th>
+                                <th class="p-3 font-bold">تاريخ الإرسال</th>
+                                <th class="p-3 font-bold text-center">الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminFilesTableBody" class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700 text-sm">
+                            <!-- البيانات هتنزل هنا -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- نظام الدردشة الحقيقي المطور بـ Supabase Realtime -->
+    <!-- ============================================== -->
+    <div id="chatWidget" class="hidden fixed bottom-6 left-6 z-[100] flex-col items-start gap-2 no-print">
+        <div id="chatPanel" class="hidden w-80 sm:w-96 bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-2xl shadow-2xl flex-col overflow-hidden transition-all duration-300">
+            
+            <div class="bg-brand-gold text-white p-3 flex justify-between items-center">
+                <div class="flex items-center gap-2 font-bold w-full">
+                    <button id="chatBackBtn" class="hidden hover:bg-white/20 p-1 rounded transition-colors" onclick="showAdminInbox()">🔙</button>
+                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span id="chatTitle">رسائل الشركات</span>
+                </div>
+                <button class="hover:text-gray-200 p-1" onclick="toggleChatPanel()">✖</button>
+            </div>
+            
+            <!-- صندوق الوارد للإدارة -->
+            <div id="adminInbox" class="hidden h-[300px] p-2 overflow-y-auto bg-gray-50 dark:bg-slate-900 flex-col gap-2"></div>
+            
+            <!-- نافذة المحادثة -->
+            <div id="chatMessages" class="h-[300px] p-3 overflow-y-auto flex flex-col gap-3 bg-gray-50 dark:bg-slate-900 text-sm"></div>
+            
+            <!-- صندوق الإدخال والمرفقات -->
+            <div id="chatInputArea" class="p-2 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 flex gap-2 items-center">
+                <input type="file" id="chatFile" class="hidden" onchange="uploadChatFile(event)">
+                <button onclick="document.getElementById('chatFile').click()" class="text-brand-gold hover:text-brand-goldHover p-2 rounded-xl transition-colors bg-brand-goldLight dark:bg-slate-700 border border-brand-gold/30" title="إرفاق ملف">📎</button>
+                <input type="text" id="chatInput" class="flex-grow px-3 py-2 rounded-xl border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white focus:outline-none focus:border-brand-gold text-sm font-bold" placeholder="اكتب رسالة..." onkeypress="if(event.key === 'Enter') sendRealMessage()">
+                <button onclick="sendRealMessage()" class="bg-brand-green hover:bg-brand-greenDark text-white p-2.5 rounded-xl transition-colors shadow-sm">
+                    <svg class="w-5 h-5 transform -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+            <!-- مؤشر التحميل للملفات -->
+            <div id="uploadProgress" class="hidden text-xs text-center bg-brand-goldLight text-brand-gold p-1 font-bold">جاري رفع الملف...</div>
+        </div>
+        
+        <button id="chatTrigger" onclick="toggleChatPanel()" class="w-14 h-14 bg-brand-gold hover:bg-brand-goldHover text-white rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-105 border-2 border-white dark:border-slate-800 relative">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+            <span id="chatBadge" class="hidden absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full"></span>
+        </button>
+    </div>
+
+    <script>
+        Chart.defaults.font.family = 'Tajawal';
+        
+        // رابط التطبيق الخاص بك
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwT6DzdMjPiyxqKru4f6SiQvvHUJTA0UP7MZnQjePxKlpQh8ZeG__IslRxnF4-3x1WqIQ/exec";
+
+        let globalWorkbook = null;
+        let sheetsData = {};
+        let currentSheetName = "";
+        let dashboardData = [];
+        let doughnutChartInstance = null;
+        let overviewChartInstance = null;
+        let currentCampData = null;
+        let fileHandle = null;
+        let isExternal = false;
+        let summarySheetData = null;
+        let miniChartInstances = {};
+        let adminUsersCache = [];
+        
+        // ==============================================
+        // متغيرات الشات والإشعارات الجديدة
+        // ==============================================
+        const SUPABASE_URL = 'https://rescepzzyzjzvddfxygp.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable__zQ1jKceZqBbA3UxNQkIoQ_Oyf6tJe9';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let chatRealtimeChannel = null;
+        let activeChatUser = null; 
+        let meUser = null;
+        let unreadNotifs = 0;
+
+        const URL_LOGO_EC = "https://iili.io/CwET9t9.png";
+        const URL_LOGO_MIN = "https://upload.wikimedia.org/wikipedia/ar/thumb/a/ac/%D8%B4%D8%B9%D8%A7%D8%B1_%D9%88%D8%B2%D8%A7%D8%B1%D8%A9_%D8%A7%D9%84%D8%AD%D8%AC_%D9%88%D8%A7%D9%84%D8%B9%D9%85%D8%B1%D8%A9.svg/3840px-%D8%B4%D8%B9%D8%A7%D8%B1_%D9%88%D8%B2%D8%A7%D8%B1%D8%A9_%D8%A7%D9%84%D8%AD%D8%AC_%D9%88%D8%A7%D9%84%D8%B9%D9%85%D8%B1%D8%A9.svg.png";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('logoEC').src = URL_LOGO_EC;
+            document.getElementById('exportLogoEC').src = URL_LOGO_EC;
+            document.getElementById('logoMin').src = URL_LOGO_MIN;
+            document.getElementById('exportLogoMin').src = URL_LOGO_MIN;
+            
+            if (sessionStorage.getItem("isLoggedIn") === "true") {
+                showSelectionScreen(false);
+            }
+        });
+
+        // إغلاق القوائم عند النقر خارجها
+        document.addEventListener('click', (e) => { 
+            if (!document.getElementById('campDropdownContainer')?.contains(e.target)) {
+                document.getElementById('dropdownList')?.classList.add('hidden'); 
+            }
+            if (document.getElementById('adminFilters') && !document.getElementById('adminFilters').contains(e.target)) {
+                if(document.getElementById('dropdownCompanyList')) document.getElementById('dropdownCompanyList').classList.add('hidden');
+                if(document.getElementById('dropdownCountryList')) document.getElementById('dropdownCountryList').classList.add('hidden');
+            }
+            const notifDropdown = document.getElementById('notifDropdown');
+            const notifBtnContainer = document.getElementById('notificationBtnContainer');
+            if (notifDropdown && notifBtnContainer && !notifBtnContainer.contains(e.target)) {
+                notifDropdown.classList.add('hidden');
+            }
+        });
+
+        // ===============================================
+        // دوال الإشعارات والتحذير الشهري
+        // ===============================================
+        function toggleNotifications() {
+            document.getElementById('notifDropdown').classList.toggle('hidden');
+        }
+
+        function addNotification(message) {
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            const count = document.getElementById('notifCount');
+            
+            if (unreadNotifs === 0) list.innerHTML = ''; 
+            unreadNotifs++; badge.classList.remove('hidden'); count.textContent = unreadNotifs;
+            
+            const timeStr = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            list.insertAdjacentHTML('afterbegin', `<div class="p-3 bg-brand-goldLight dark:bg-slate-700 rounded-lg border-r-4 border-brand-gold shadow-sm flex flex-col gap-1 text-right"><span class="text-sm font-bold text-brand-green dark:text-white">${message}</span><span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">${timeStr}</span></div>`);
+        }
+
+        function checkMonthlyBackupWarning() {
+            const now = new Date();
+            const currentDay = now.getDate();
+            const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            
+            if (currentDay >= (lastDayOfMonth - 5)) {
+                const lastWarn = localStorage.getItem('last_backup_warn');
+                const todayStr = now.toDateString();
+                if (lastWarn !== todayStr) {
+                    addNotification("⚠️ تنبيه هام: باقي أيام قليلة ويتم تفريغ مساحة المرفقات تلقائياً نهاية الشهر. يرجى مراجعة وتنزيل ملفات الشركات.");
+                    localStorage.setItem('last_backup_warn', todayStr);
+                }
+            }
+        }
+
+        // ===============================================
+        // نظام الشات الحقيقي ومرفقات الإدمن
+        // ===============================================
+        function toggleChatPanel() {
+            const panel = document.getElementById('chatPanel');
+            document.getElementById('chatBadge').classList.add('hidden');
+            if(panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                panel.classList.add('flex');
+                if(meUser) {
+                    if(meUser.role === 'admin' && !activeChatUser) showAdminInbox();
+                    else if(meUser.role !== 'admin') openChatThread('admin');
+                }
+            } else {
+                panel.classList.add('hidden');
+                panel.classList.remove('flex');
+            }
+        }
+
+        async function initChatSystem() {
+            meUser = JSON.parse(sessionStorage.getItem("userData") || '{}');
+            if(!meUser.username) return;
+            document.getElementById('chatWidget').classList.remove('hidden');
+            document.getElementById('chatWidget').classList.add('flex');
+            
+            // تفعيل التحذير للإدمن
+            if (meUser.role === 'admin') checkMonthlyBackupWarning();
+            
+            if(chatRealtimeChannel) supabaseClient.removeChannel(chatRealtimeChannel);
+            chatRealtimeChannel = supabaseClient.channel('public:chat_messages')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, payload => {
+                    const msg = payload.new;
+                    if(msg.receiver === (meUser.role === 'admin' ? 'admin' : meUser.username)) {
+                        if(document.getElementById('chatPanel').classList.contains('hidden') || (meUser.role === 'admin' && activeChatUser !== msg.sender)) {
+                            document.getElementById('chatBadge').classList.remove('hidden');
+                            showToast("لديك رسالة جديدة من: " + msg.sender, "success");
+                            if(meUser.role === 'admin' && !activeChatUser) showAdminInbox();
+                        }
+                        if(activeChatUser === msg.sender) appendMessage(msg);
+                    }
+                }).subscribe();
+        }
+
+        async function showAdminInbox() {
+            activeChatUser = null;
+            document.getElementById('chatTitle').textContent = "صندوق الوارد للشركات";
+            document.getElementById('chatBackBtn').classList.add('hidden');
+            document.getElementById('adminInbox').classList.remove('hidden');
+            document.getElementById('adminInbox').classList.add('flex');
+            document.getElementById('chatMessages').classList.add('hidden');
+            document.getElementById('chatInputArea').classList.add('hidden');
+            
+            const inbox = document.getElementById('adminInbox');
+            inbox.innerHTML = '<div class="text-center p-4 text-gray-500 font-bold">جاري تحميل المحادثات...</div>';
+            
+            const { data, error } = await supabaseClient.from('chat_messages').select('sender, created_at').eq('receiver', 'admin').order('created_at', { ascending: false });
+            if(error) { inbox.innerHTML = '<div class="text-center p-4 text-red-500 font-bold">خطأ في جلب الرسائل</div>'; return; }
+            
+            const uniqueSenders = [...new Set(data.map(m => m.sender))];
+            inbox.innerHTML = uniqueSenders.length === 0 ? '<div class="text-center p-4 text-gray-500 font-bold">لا يوجد رسائل حتى الآن</div>' : '';
+            
+            uniqueSenders.forEach(sender => {
+                inbox.innerHTML += `<div onclick="openChatThread('${sender}')" class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm cursor-pointer hover:border-brand-gold transition-colors font-bold text-brand-green dark:text-white flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-brand-goldLight flex items-center justify-center text-brand-gold">🏢</div> ${sender}</div>`;
+            });
+        }
+
+        async function openChatThread(otherUser) {
+            activeChatUser = otherUser;
+            document.getElementById('chatTitle').textContent = meUser.role === 'admin' ? otherUser : "الإدارة العامة للمشاعر المقدسة";
+            if(meUser.role === 'admin') document.getElementById('chatBackBtn').classList.remove('hidden');
+            
+            document.getElementById('adminInbox').classList.add('hidden');
+            document.getElementById('adminInbox').classList.remove('flex');
+            document.getElementById('chatMessages').classList.remove('hidden');
+            document.getElementById('chatInputArea').classList.remove('hidden');
+            document.getElementById('chatInputArea').classList.add('flex');
+            
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.innerHTML = '<div class="text-center p-4 text-gray-500 font-bold">جاري تحميل الرسائل...</div>';
+            
+            const myId = meUser.role === 'admin' ? 'admin' : meUser.username;
+            const theirId = otherUser;
+            
+            const { data, error } = await supabaseClient.from('chat_messages').select('*')
+                .or(`and(sender.eq.${myId},receiver.eq.${theirId}),and(sender.eq.${theirId},receiver.eq.${myId})`)
+                .order('created_at', { ascending: true });
+                
+            messagesDiv.innerHTML = '';
+            if(data) data.forEach(msg => appendMessage(msg));
+            setTimeout(() => { messagesDiv.scrollTop = messagesDiv.scrollHeight; }, 100);
+        }
+
+        function appendMessage(msg) {
+            const isMe = msg.sender === (meUser.role === 'admin' ? 'admin' : meUser.username);
+            let fileHtml = '';
+            if(msg.file_url) {
+                fileHtml = `<a href="${msg.file_url}" target="_blank" class="block mt-2 bg-black/10 p-2 rounded-lg text-xs font-bold underline flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> المرفق: ${msg.file_name || 'ملف'}</a>`;
+            }
+            
+            const div = document.createElement('div');
+            div.className = isMe 
+                ? "self-end bg-brand-gold text-white p-2.5 rounded-xl rounded-tl-none max-w-[85%] shadow-sm" 
+                : "self-start bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white p-2.5 rounded-xl rounded-tr-none max-w-[85%] shadow-sm";
+            div.innerHTML = `<div>${msg.message || ''}</div>${fileHtml}`;
+            document.getElementById('chatMessages').appendChild(div);
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        }
+
+        async function uploadChatFile(e) {
+            const file = e.target.files[0]; if(!file) return;
+            document.getElementById('uploadProgress').classList.remove('hidden');
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            
+            const { data, error } = await supabaseClient.storage.from('chat_attachments').upload(fileName, file);
+            if (error) { showToast("فشل رفع الملف", "error"); document.getElementById('uploadProgress').classList.add('hidden'); return; }
+            
+            const { data: urlData } = supabaseClient.storage.from('chat_attachments').getPublicUrl(fileName);
+            await sendRealMessage(urlData.publicUrl, file.name);
+            document.getElementById('uploadProgress').classList.add('hidden');
+            e.target.value = ''; 
+        }
+
+        async function sendRealMessage(fileUrl = null, fileName = null) {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if(!text && !fileUrl) return;
+            
+            input.value = '';
+            const myId = meUser.role === 'admin' ? 'admin' : meUser.username;
+            const theirId = activeChatUser;
+            
+            const msgObj = { sender: myId, receiver: theirId, message: text, file_url: fileUrl, file_name: fileName };
+            appendMessage(msgObj);
+            
+            const { error } = await supabaseClient.from('chat_messages').insert([msgObj]);
+            if(error) showToast("فشل إرسال الرسالة", "error");
+        }
+
+        // --- دوال شاشة إدارة المرفقات للإدمن ---
+        async function openAdminFilesModal() {
+            document.getElementById('adminFilesModal').classList.remove('hidden');
+            loadAllAdminFiles();
+        }
+
+        async function loadAllAdminFiles() {
+            const tbody = document.getElementById('adminFilesTableBody');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 font-bold text-brand-gold">جاري جلب الملفات المرفقة...</td></tr>';
+            
+            const { data, error } = await supabaseClient.from('chat_messages').select('*').not('file_url', 'is', null).order('created_at', { ascending: false });
+                
+            if(error) { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-red-500 font-bold">حدث خطأ أثناء جلب الملفات</td></tr>'; return; }
+            if(!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4 text-gray-500 font-bold">لا توجد ملفات مرفقة حتى الآن</td></tr>'; return; }
+            
+            tbody.innerHTML = '';
+            data.forEach(msg => {
+                const dateStr = new Date(msg.created_at).toLocaleString('ar-EG');
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                        <td class="p-3 font-bold text-brand-green dark:text-brand-gold">${msg.sender}</td>
+                        <td class="p-3 font-medium dark:text-white truncate max-w-[150px] sm:max-w-xs" title="${msg.file_name}">${msg.file_name || 'ملف مرفق'}</td>
+                        <td class="p-3 text-gray-500 dark:text-gray-400 text-xs font-bold">${dateStr}</td>
+                        <td class="p-3 text-center flex justify-center gap-2">
+                            <a href="${msg.file_url}" target="_blank" class="px-3 py-1 bg-brand-green text-white rounded-lg font-bold text-xs hover:bg-brand-greenDark shadow-sm">تنزيل</a>
+                            <button onclick="deleteSingleFile('${msg.id}')" class="px-3 py-1 bg-red-500 text-white rounded-lg font-bold text-xs hover:bg-red-700 shadow-sm">حذف</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function deleteSingleFile(msgId) {
+            if(!confirm("هل أنت متأكد من حذف هذا الملف من السجل؟")) return;
+            showToast("جاري الحذف...", "success");
+            const { error } = await supabaseClient.from('chat_messages').delete().eq('id', msgId);
+            if(!error) { showToast("تم الحذف بنجاح", "success"); loadAllAdminFiles(); } 
+            else { showToast("فشل الحذف", "error"); }
+        }
+
+        // ===============================================
+        // باقي دوال النظام الأساسية الأصلية (بلا أي تغيير)
+        // ===============================================
+
+        function toggleMobileMenu() {
+            document.getElementById('headerButtons').classList.toggle('hidden');
+            document.getElementById('headerButtons').classList.toggle('flex');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('usernameInput').value.trim();
+            const p = document.getElementById('passwordInput').value.trim();
+            
+            showToast("جاري التحقق من الحساب...", "success");
+
+            if (SCRIPT_URL.includes("XXXXX")) {
+                if (u === "admin" && p === "12345") {
+                    sessionStorage.setItem("isLoggedIn", "true");
+                    sessionStorage.setItem("userData", JSON.stringify({ role: 'admin', sector: 'الكل' }));
+                    showToast("تم تسجيل الدخول بنجاح!", "success");
+                    showSelectionScreen(false);
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`);
+                const json = await res.json();
+                
+                if (json.success) {
+                    sessionStorage.setItem("isLoggedIn", "true");
+                    sessionStorage.setItem("userData", JSON.stringify(json.user));
+                    showToast(json.message || "تم تسجيل الدخول بنجاح!", "success");
+                    showSelectionScreen(false);
+                } else {
+                    showToast(json.message || "بيانات الدخول غير صحيحة", "error");
+                }
+            } catch (err) {
+                showToast("تعذر الاتصال بالخادم. برجاء المحاولة لاحقاً", "error");
+            }
+        }
+
+        function applyUserPermissions() {
+            const user = JSON.parse(sessionStorage.getItem("userData") || '{}');
+            const inputs = ['val-totalArea-input', 'val-housingArea-input', 'val-tentArea-input', 'val-pilgrims-input', 'val-allocated-input'];
+            const adminFilters = document.getElementById('adminFilters');
+            
+            // تفعيل الإشعارات والشات وزرار المرفقات لو مسجل دخول
+            if(user.role) {
+                document.getElementById('notificationBtnContainer').classList.remove('hidden');
+                initChatSystem(); 
+            }
+
+            if (user.role === 'admin') {
+                document.getElementById('adminFilesBtn')?.classList.remove('hidden');
+                
+                if(adminFilters) {
+                    adminFilters.classList.remove('hidden');
+                    adminFilters.classList.add('flex');
+                }
+                
+                inputs.forEach(id => {
+                    let el = document.getElementById(id);
+                    if(el) { 
+                        el.removeAttribute('readonly'); 
+                        el.classList.add('editable-input'); 
+                        el.style.cursor = 'text'; 
+                    }
+                });
+
+                if (user.sector === 'الكل') {
+                    const btn = document.getElementById('adminPanelBtn');
+                    if(btn) btn.classList.remove('hidden');
+                } else {
+                    const btn = document.getElementById('adminPanelBtn');
+                    if(btn) btn.classList.add('hidden');
+                }
+            } else {
+                document.getElementById('adminFilesBtn')?.classList.add('hidden');
+                const btn = document.getElementById('adminPanelBtn');
+                if(btn) btn.classList.add('hidden');
+                
+                const saveBtn = document.getElementById('saveChangesBtn');
+                if(saveBtn) saveBtn.classList.add('hidden');
+                
+                if(adminFilters) {
+                    adminFilters.classList.add('hidden');
+                    adminFilters.classList.remove('flex');
+                }
+                
+                inputs.forEach(id => {
+                    let el = document.getElementById(id);
+                    if(el) { 
+                        el.setAttribute('readonly', 'true'); 
+                        el.classList.remove('editable-input'); 
+                        el.style.border = 'none'; 
+                        el.style.background = 'transparent'; 
+                        el.style.cursor = 'default';
+                    }
+                });
+            }
+
+            const cardInt = document.getElementById('card-internal');
+            const cardExt = document.getElementById('card-external');
+            const gridContainer = document.getElementById('sectorCardsGrid');
+            
+            if (user.sector === 'الداخل') {
+                if(cardExt) cardExt.style.display = 'none';
+                if(cardInt) cardInt.style.display = 'flex';
+                if(gridContainer) gridContainer.className = "flex justify-center w-full max-w-xl mx-auto";
+            } else if (user.sector === 'الخارج') {
+                if(cardInt) cardInt.style.display = 'none';
+                if(cardExt) cardExt.style.display = 'flex';
+                if(gridContainer) gridContainer.className = "flex justify-center w-full max-w-xl mx-auto";
+            } else {
+                if(cardInt) cardInt.style.display = 'flex';
+                if(cardExt) cardExt.style.display = 'flex';
+                if(gridContainer) gridContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8";
+            }
+        }
+
+        function showSelectionScreen(forceShow) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('logoutBtn').classList.remove('hidden');
+            
+            applyUserPermissions();
+            const user = JSON.parse(sessionStorage.getItem("userData") || '{}');
+
+            if (user.role === 'user' && !forceShow) {
+                document.getElementById('selectionSection').classList.add('hidden');
+                document.getElementById('uploadNewBtn').classList.add('hidden');
+                let target = (user.sector && user.sector.includes('الخارج')) ? 'external' : 'internal';
+                loadGoogleSheet(target);
+            } else {
+                document.getElementById('selectionSection').classList.remove('hidden');
+                document.getElementById('uploadNewBtn').classList.add('hidden');
+                renderSelectionCharts();
+                fetchSummaryRatios();
+            }
+        }
+
+        async function fetchSummaryRatios() {
+            if (SCRIPT_URL.includes("XXXXX")) return;
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=getSummary`);
+                const json = await res.json();
+                if (json.success && json.data) {
+                    renderSelectionCharts(json.data);
+                }
+            } catch (err) {}
+        }
+
+        function logout() {
+            sessionStorage.removeItem("isLoggedIn");
+            sessionStorage.removeItem("userData");
+            location.reload();
+        }
+
+        function resetApp() {
+            showSelectionScreen(true);
+        }
+
+        function renderSelectionCharts(customData = null) {
+            const intCamps = customData?.internal?.camps || 19;
+            const intPilgrims = customData?.internal?.pilgrims || 9;
+            const extCamps = customData?.external?.camps || 81;
+            const extPilgrims = customData?.external?.pilgrims || 91;
+
+            createMiniDoughnut('selIntCampsCanvas', intCamps, '#196d5a', `${intCamps}%`);
+            createMiniDoughnut('selIntPilgrimsCanvas', intPilgrims, '#196d5a', `${intPilgrims}%`);
+            createMiniDoughnut('selExtCampsCanvas', extCamps, '#c79a55', `${extCamps}%`);
+            createMiniDoughnut('selExtPilgrimsCanvas', extPilgrims, '#c79a55', `${extPilgrims}%`);
+        }
+
+        function createMiniDoughnut(canvasId, percentage, color, labelText) {
+            const el = document.getElementById(canvasId);
+            if(!el) return;
+            if (miniChartInstances[canvasId]) miniChartInstances[canvasId].destroy();
+            const ctx = el.getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            miniChartInstances[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [percentage, Math.max(0, 100 - percentage)], backgroundColor: [color, isDark ? '#334155' : '#e2e8f0'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '76%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { duration: 600 } },
+                plugins: [{
+                    id: 'miniCenterText_' + canvasId,
+                    afterDraw: (chart) => {
+                        const width = chart.width, height = chart.height, cCtx = chart.ctx;
+                        cCtx.save(); cCtx.font = '900 18px Tajawal'; cCtx.fillStyle = isDark ? '#ffffff' : '#1e293b'; cCtx.textAlign = 'center'; cCtx.textBaseline = 'middle'; cCtx.fillText(labelText, width / 2, height / 2); cCtx.restore();
+                    }
+                }]
+            });
+        }
+
+        async function openAdminModal() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" class="text-center p-4">جاري التحميل...</td></tr>';
+            try {
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "manageUsers", operation: "get" }) });
+                const result = await response.json();
+                if(result.success) { adminUsersCache = result.data; renderUsersTable(); }
+            } catch(e) {}
+        }
+        function closeAdminModal() { document.getElementById('adminModal').classList.add('hidden'); resetUserForm(); }
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody'); tbody.innerHTML = '';
+            adminUsersCache.forEach(u => {
+                tbody.innerHTML += `<tr><td class="p-3 font-bold">${u.username}</td><td class="p-3">${u.role}</td><td class="p-3">${u.sector}</td><td class="p-3">${u.refName}</td><td class="p-3 text-center"><button onclick="editUser(${u.rowNumber})" class="text-blue-500 hover:text-blue-700 ml-3">تعديل</button><button onclick="deleteUser(${u.rowNumber})" class="text-red-500 hover:text-red-700">حذف</button></td></tr>`;
+            });
+        }
+        function editUser(rowNum) {
+            const u = adminUsersCache.find(x => x.rowNumber === rowNum); if(!u) return;
+            document.getElementById('userFormTitle').textContent = "تعديل مستخدم"; document.getElementById('editRowNumber').value = u.rowNumber; document.getElementById('addUsername').value = u.username; document.getElementById('addPassword').value = u.password; document.getElementById('addRole').value = u.role; document.getElementById('addSector').value = u.sector; document.getElementById('addRefName').value = u.refName;
+        }
+        function resetUserForm() {
+            document.getElementById('userFormTitle').textContent = "إضافة مستخدم جديد"; document.getElementById('editRowNumber').value = ""; document.getElementById('addUsername').value = ""; document.getElementById('addPassword').value = ""; document.getElementById('addRole').value = "user"; document.getElementById('addSector').value = "الكل"; document.getElementById('addRefName').value = "";
+        }
+        async function saveUser() {
+            const rowNumber = document.getElementById('editRowNumber').value;
+            const userData = { rowNumber: rowNumber || null, username: document.getElementById('addUsername').value.trim(), password: document.getElementById('addPassword').value.trim(), role: document.getElementById('addRole').value, sector: document.getElementById('addSector').value, refName: document.getElementById('addRefName').value.trim() };
+            if(!userData.username || !userData.password) { showToast("يرجى إكمال البيانات", "error"); return; }
+            showToast("جاري الحفظ...", "success");
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "manageUsers", operation: rowNumber ? 'edit' : 'add', userData: userData }) });
+                const result = await res.json();
+                if(result.success) { showToast(result.message, "success"); openAdminModal(); resetUserForm(); }
+            } catch(e) {}
+        }
+        async function deleteUser(rowNumber) {
+            if(!confirm("هل أنت متأكد من حذف المستخدم؟")) return;
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "manageUsers", operation: 'delete', userData: { rowNumber: rowNumber } }) });
+                const result = await res.json();
+                if(result.success) { showToast(result.message, "success"); openAdminModal(); }
+            } catch(e) {}
+        }
+
+        async function loadGoogleSheet(type) {
+            const action = type === 'internal' ? 'getInternal' : 'getExternal';
+            const fileName = type === 'internal' ? 'شيت الداخل.xlsx' : 'شيت الخارج.xlsx';
+            
+            showToast("جاري تحميل البيانات...", "success");
+
+            const userContext = sessionStorage.getItem("userData") || "{}";
+
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=${action}&userContext=${encodeURIComponent(userContext)}`);
+                const json = await res.json();
+                
+                if (json.success && json.data && Object.keys(json.data).length > 0) {
+                    parseSheetsJson(json.data, fileName);
+                } else {
+                    showToast("لم يتم العثور على بيانات صالحة.", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("تعذر تحميل البيانات.", "error");
+            }
+        }
+
+        function parseSheetsJson(jsonSheets, fileName) {
+            updateTitleByFileName(fileName);
+            sheetsData = {};
+            summarySheetData = null;
+
+            Object.keys(jsonSheets).forEach(sheetName => {
+                const rows = jsonSheets[sheetName];
+                if (!rows || rows.length <= 1) return;
+
+                if (sheetName.includes("اجمالي") || sheetName.includes("الإجمالي")) {
+                    summarySheetData = rows[1] || rows[0];
+                    return;
+                }
+
+                const headerRow = rows[0];
+                let colMap = {};
+                for (let i = 0; i < headerRow.length; i++) {
+                    if (headerRow[i] !== undefined && headerRow[i] !== null) {
+                        colMap[String(headerRow[i]).trim()] = i;
+                        colMap[String(headerRow[i]).replace(/\s+/g, '')] = i;
+                    }
+                }
+
+                const getColIdxSafe = (keys) => {
+                    for(let key in colMap) { for(let word of keys) { if(key.includes(word.replace(/\s+/g, ''))) return colMap[key]; } }
+                    return null;
+                };
+
+                let colIdxTotalArea = getColIdxSafe(["مساحة المخيم الكلية"]);
+                let colIdxHousingArea = getColIdxSafe(["المساحة المخصصه للاسكان", "المساحة المخصصة للإسكان"]);
+                let colIdxTentArea = getColIdxSafe(["مساحة الخيام وفق التصميم"]);
+                let colIdxPilgrims = getColIdxSafe(["عدد الحجاج"]);
+                let colIdxAllocated = getColIdxSafe(["عدد الحجاج المخصص"]);
+                let colIdxSurplus = getColIdxSafe(["الفائض"]);
+                let colCoords = getColIdxSafe(["XY", "xy", "الموقع بالاحداثيات", "احداثيات", "الإحداثيات"]);
+                let colKml = getColIdxSafe(["الموقع kml", "kmz", "KMZ"]);
+
+                if (!isExternal && sheetName.includes("تشاركية")) {
+                    if (sheetName.includes("مخيمات")) colKml = colKml !== null ? colKml : 17;
+                    else if (sheetName.includes("ابراج")) colKml = colKml !== null ? colKml : 13;
+                }
+
+                let rowsData = [];
+
+                for (let r = 1; r < rows.length; r++) {
+                    const row = rows[r];
+                    let campIdx = getColIdxSafe(["اسم المخيم"]);
+                    let camp = campIdx !== null ? row[campIdx] : null;
+                    if (!camp || String(camp).trim() === "") continue;
+
+                    let lat = null, lng = null;
+                    if (colCoords !== null && row[colCoords]) {
+                        let parts = String(row[colCoords]).trim().replace(/[;/]/g, ',').split(',').map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                        if (parts.length < 2) parts = String(row[colCoords]).trim().split(/\s+/).map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                        if (parts.length >= 2) {
+                            if (parts[0] > 30) { lng = parts[0]; lat = parts[1]; }
+                            else { lat = parts[0]; lng = parts[1]; }
+                        }
+                    }
+
+                    let kmlUrl = (colKml !== null && row[colKml]) ? String(row[colKml]).trim() : null;
+
+                    let tentAreaVal = colIdxTentArea !== null ? Math.round(Number(row[colIdxTentArea])||0) : 0;
+                    let allocatedPilgrimsVal = colIdxAllocated !== null ? Math.round(Number(row[colIdxAllocated])||0) : 0;
+                    let occupancyRate = isExternal ? ((allocatedPilgrimsVal > 0) ? (tentAreaVal / allocatedPilgrimsVal) : 0) : 0;
+
+                    let rowObj = {
+                        rowNumber: r + 1,
+                        campName: String(camp).trim(),
+                        totalArea: colIdxTotalArea !== null ? Math.round(Number(row[colIdxTotalArea])||0) : 0,
+                        housingArea: colIdxHousingArea !== null ? Math.round(Number(row[colIdxHousingArea])||0) : 0,
+                        tentArea: tentAreaVal,
+                        pilgrimsCount: colIdxPilgrims !== null ? Math.round(Number(row[colIdxPilgrims])||0) : 0,
+                        allocatedPilgrims: allocatedPilgrimsVal,
+                        surplus: colIdxSurplus !== null ? Math.round(Number(row[colIdxSurplus])||0) : 0,
+                        occupancyRate: occupancyRate,
+                        coordX: lat,
+                        coordY: lng,
+                        kmlUrl: kmlUrl,
+                        colIdxTotalArea: colIdxTotalArea ? colIdxTotalArea + 1 : null,
+                        colIdxHousingArea: colIdxHousingArea ? colIdxHousingArea + 1 : null,
+                        colIdxTentArea: colIdxTentArea ? colIdxTentArea + 1 : null,
+                        colIdxPilgrims: colIdxPilgrims ? colIdxPilgrims + 1 : null,
+                        colIdxAllocated: colIdxAllocated ? colIdxAllocated + 1 : null,
+                        colIdxSurplus: colIdxSurplus ? colIdxSurplus + 1 : null,
+                        isShared: sheetName.includes("تشاركية"),
+                        isGov: sheetName.includes("جهات حكومية"),
+                        companies: [],
+                        countryNames: [],
+                        companyName: ""
+                    };
+
+                    if (isExternal) {
+                        let cIdx = getColIdxSafe(["اسم الشركة"]);
+                        rowObj.companyName = (cIdx !== null && row[cIdx]) ? String(row[cIdx]).trim() : "غير متوفر";
+
+                        if (rowObj.isShared) {
+                            for (let i = 0; i < headerRow.length; i++) {
+                                let hdr = headerRow[i] ? String(headerRow[i]).trim() : "";
+                                if (hdr.includes("دولة") && !hdr.includes("عدد") && !hdr.includes("أسماء")) {
+                                    if (row[i] && String(row[i]).trim() !== "" && String(row[i]).trim() !== "0" && String(row[i]).trim() !== "nan") {
+                                        rowObj.countryNames.push(String(row[i]).trim());
+                                    }
+                                }
+                            }
+                        } else {
+                            let cntIdx = getColIdxSafe(["أسماء الدول", "اسم الدولة"]);
+                            if (cntIdx !== null && row[cntIdx] && String(row[cntIdx]).trim() !== "") {
+                                rowObj.countryNames = [String(row[cntIdx]).trim()];
+                            }
+                        }
+                    } else {
+                        if (rowObj.isShared) {
+                            let maxComp = sheetName.includes("ابراج") ? 2 : 4;
+                            for (let c = 1; c <= maxComp; c++) {
+                                let nIdx = getColIdxSafe([`اسم الشركة ${c}`, `اسم الشركة${c}`]);
+                                let pIdx = getColIdxSafe([`حجاج شركة ${c}`, `حجاج شركة${c}`]);
+                                if (nIdx !== null && row[nIdx]) {
+                                    rowObj.companies.push({ name: String(row[nIdx]).trim(), pilgrims: (pIdx !== null ? Math.round(Number(row[pIdx])||0) : 0) });
+                                }
+                            }
+                        } else if (rowObj.isGov) {
+                            let gIdx = getColIdxSafe(["اسم الجهة الحكومية"]);
+                            let gName = (gIdx !== null && row[gIdx]) ? String(row[gIdx]).trim() : "غير متوفر";
+                            rowObj.companies.push({ name: gName, pilgrims: rowObj.allocatedPilgrims });
+                        } else {
+                            let compIdx = getColIdxSafe(["اسم الشركة"]);
+                            let compName = (compIdx !== null && row[compIdx]) ? String(row[compIdx]).trim() : "غير متوفر";
+                            rowObj.companies.push({ name: compName, pilgrims: rowObj.allocatedPilgrims });
+                        }
+                    }
+
+                    rowsData.push(rowObj);
+                }
+
+                if (rowsData.length > 0) {
+                    sheetsData[sheetName] = rowsData;
+                }
+            });
+
+            activateDashboardView();
+        }
+
+        function activateDashboardView() {
+            const sheetNames = Object.keys(sheetsData);
+            if (sheetNames.length > 0) {
+                const userSession = JSON.parse(sessionStorage.getItem("userData") || '{}');
+                buildSheetsNavbar(sheetNames, userSession);
+                
+                if ((userSession.role === 'admin' || !userSession.role) && summarySheetData) {
+                    switchSheet("main-overview");
+                } else {
+                    switchSheet(sheetNames[0]);
+                }
+                
+                document.getElementById('selectionSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                document.getElementById('uploadNewBtn').classList.remove('hidden');
+                showToast("تم تحميل البيانات بنجاح!", "success");
+            } else {
+                showToast("لم يتم العثور على بيانات صالحة.", "error");
+            }
+        }
+
+        function updateTitleByFileName(fileName) {
+            const mainTitleEl = document.getElementById('mainTitle');
+            const printMainTitle = document.getElementById('printMainTitle');
+            isExternal = fileName.includes('الخارج');
+            let titleText = isExternal ? 'تخصيص مواقع إسكان حجاج الخارج بمشعر عرفات لموسم حج 1447 هـ' : 'تخصيص مواقع إسكان حجاج الداخل بمشعر عرفات لموسم حج 1447 هـ';
+            if(mainTitleEl) mainTitleEl.textContent = titleText;
+            if(printMainTitle) printMainTitle.textContent = titleText;
+        }
+
+        function buildSheetsNavbar(sheetNames, userSession) {
+            const navbar = document.getElementById('sheetsNavbar');
+            navbar.innerHTML = '';
+            
+            if (userSession.role === 'admin' || !userSession.role) {
+                const topContainer = document.createElement('div');
+                topContainer.className = "w-full mb-4 pb-4 border-b-2 border-gray-100 dark:border-slate-700";
+                
+                const mainBtn = document.createElement('button');
+                mainBtn.id = `sheetBtn-main-overview`;
+                mainBtn.className = "w-full py-4 px-6 rounded-2xl font-black text-lg sm:text-xl md:text-2xl transition-all shadow-md border-2 border-brand-gold/40 bg-brand-goldLight dark:bg-slate-800 text-brand-green dark:text-brand-gold hover:border-brand-gold hover:shadow-xl";
+                mainBtn.textContent = "إجمالي تخصيص اسكان حجاج مشعر عرفات";
+                mainBtn.onclick = () => switchSheet("main-overview");
+                topContainer.appendChild(mainBtn);
+                navbar.appendChild(topContainer);
+            }
+
+            const bottomContainer = document.createElement('div');
+            bottomContainer.className = "w-full flex flex-wrap justify-center items-center gap-2 sm:gap-3";
+
+            sheetNames.forEach(name => {
+                const btn = document.createElement('button');
+                btn.id = `sheetBtn-${name}`;
+                btn.className = `px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-black text-base sm:text-lg transition-all shadow-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600`;
+                btn.textContent = name;
+                btn.onclick = () => switchSheet(name);
+                bottomContainer.appendChild(btn);
+            });
+            navbar.appendChild(bottomContainer);
+        }
+
+        function switchSheet(sheetName) {
+            currentSheetName = sheetName;
+            document.getElementById('saveChangesBtn').classList.add('hidden');
+            
+            document.querySelectorAll('#sheetsNavbar button').forEach(btn => {
+                const isMain = btn.id === "sheetBtn-main-overview";
+                if(btn.id === `sheetBtn-${sheetName}`) {
+                    if (isMain) btn.className = "w-full py-4 px-6 rounded-2xl font-black text-lg sm:text-xl md:text-2xl transition-all shadow-lg border-2 border-brand-green bg-brand-green text-white scale-[1.01]";
+                    else btn.className = "px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-black text-base sm:text-lg transition-all shadow-sm bg-brand-green text-white shadow-md scale-105";
+                } else {
+                    if (isMain) btn.className = "w-full py-4 px-6 rounded-2xl font-black text-lg sm:text-xl md:text-2xl transition-all shadow-md border-2 border-brand-gold/40 bg-brand-goldLight dark:bg-slate-800 text-brand-green dark:text-brand-gold hover:border-brand-gold hover:bg-white dark:hover:bg-slate-700";
+                    else btn.className = "px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-black text-base sm:text-lg transition-all shadow-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600";
+                }
+            });
+
+            if (sheetName === "main-overview") {
+                document.getElementById('campDropdownContainer').classList.add('hidden');
+                document.getElementById('campSelectPlaceholder').classList.add('hidden');
+                document.getElementById('dataContainer').classList.add('hidden');
+                document.getElementById('overviewContainer').classList.remove('hidden');
+                
+                renderOverviewDashboard();
+                return;
+            }
+
+            dashboardData = sheetsData[sheetName] || [];
+            
+            const userSession = JSON.parse(sessionStorage.getItem("userData") || '{}');
+            if(userSession.role === 'admin') populateAdminFilters();
+
+            document.getElementById('overviewContainer').classList.add('hidden');
+            
+            applyFilters();
+        }
+
+        function populateAdminFilters() {
+            const comList = document.getElementById('optionsCompany'); comList.innerHTML = '';
+            const counList = document.getElementById('optionsCountry'); counList.innerHTML = '';
+            
+            comList.innerHTML += `<li class="company-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-green dark:text-white" onclick="selectAdminFilter('Company', 'all', 'كل الشركات / الجهات')">كل الشركات / الجهات</li>`;
+            counList.innerHTML += `<li class="country-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-gold dark:text-white" onclick="selectAdminFilter('Country', 'all', 'كل الدول')">كل الدول</li>`;
+            
+            let comps = new Set(), couns = new Set();
+            dashboardData.forEach(d => {
+                if(isExternal){ if(d.companyName && d.companyName !== 'غير متوفر') comps.add(d.companyName); d.countryNames.forEach(x=>couns.add(x)); }
+                else { d.companies.forEach(x=>{if(x.name && x.name !== 'غير متوفر') comps.add(x.name);}); }
+            });
+            
+            [...comps].sort().forEach(c => {
+                comList.innerHTML += `<li class="company-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-green dark:text-white" onclick="selectAdminFilter('Company', '${c}', '${c}')">${c}</li>`;
+            });
+            [...couns].sort().forEach(c => {
+                counList.innerHTML += `<li class="country-opt px-3 py-2 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b text-brand-gold dark:text-white" onclick="selectAdminFilter('Country', '${c}', '${c}')">${c}</li>`;
+            });
+            
+            document.getElementById('countryFilterContainer').style.display = isExternal ? 'block' : 'none';
+        }
+
+        function toggleAdminDropdown(type) {
+            document.getElementById(`dropdown${type}List`).classList.toggle('hidden');
+            document.getElementById(`search${type}`).focus();
+        }
+
+        function filterAdminList(type) {
+            const term = document.getElementById(`search${type}`).value.toLowerCase();
+            document.querySelectorAll(`.${type.toLowerCase()}-opt`).forEach(item => { 
+                item.style.display = item.textContent.toLowerCase().includes(term) ? 'block' : 'none'; 
+            });
+        }
+
+        function selectAdminFilter(type, val, displayVal) {
+            document.getElementById(`filter${type}`).value = val;
+            document.getElementById(`filter${type}Display`).value = displayVal;
+            document.getElementById(`dropdown${type}List`).classList.add('hidden');
+            applyFilters();
+        }
+
+        function resetAdminFilters() {
+            selectAdminFilter('Company', 'all', 'كل الشركات / الجهات');
+            selectAdminFilter('Country', 'all', 'كل الدول');
+        }
+
+        function applyFilters() {
+            const list = document.getElementById('campOptions'); list.innerHTML = '';
+            const userSession = JSON.parse(sessionStorage.getItem("userData") || '{}');
+            let filtered = dashboardData;
+            
+            if (userSession.role === 'admin') {
+                const compEl = document.getElementById('filterCompany');
+                const counEl = document.getElementById('filterCountry');
+                const selComp = compEl ? compEl.value : 'all';
+                const selCoun = counEl ? counEl.value : 'all';
+                
+                filtered = dashboardData.filter(d => {
+                    let mComp = (selComp === 'all' || !selComp), mCoun = (selCoun === 'all' || !selCoun);
+                    if(!mComp){ if(isExternal) mComp = (d.companyName === selComp); else mComp = d.companies.some(c=>c.name === selComp); }
+                    if(!mCoun && isExternal) mCoun = d.countryNames.includes(selCoun);
+                    return mComp && mCoun;
+                });
+            }
+
+            const uniqueCamps = [...new Set(filtered.map(i=>i.campName))];
+            
+            uniqueCamps.forEach(camp => {
+                const li = document.createElement('li');
+                li.className = "camp-option px-4 py-3 hover:bg-brand-goldLight dark:hover:bg-slate-700 cursor-pointer border-b border-gray-100 dark:border-slate-700 flex items-center gap-2 pointer-events-auto";
+                li.innerHTML = `<span>${camp}</span>`;
+                li.onclick = () => selectCamp(camp);
+                list.appendChild(li);
+            });
+
+            const uiContainer = document.getElementById('campSelectionUI');
+            const placeholder = document.getElementById('campSelectPlaceholder');
+            const dataCont = document.getElementById('dataContainer');
+            const dropdownContainer = document.getElementById('campDropdownContainer');
+
+            // إظهار شاشة الاختيار دائماً عند الفلترة أو فتح تبويبة
+            if (uniqueCamps.length > 0) {
+                if(dropdownContainer) dropdownContainer.classList.remove('hidden');
+                if(uiContainer) uiContainer.classList.remove('hidden');
+                if(dataCont) dataCont.classList.add('hidden');
+                
+                if(placeholder) {
+                    placeholder.classList.remove('hidden');
+                    placeholder.innerHTML = '<div class="w-16 h-16 sm:w-20 sm:h-20 bg-brand-goldLight dark:bg-brand-goldDark rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-brand-gold"><svg class="w-8 h-8 sm:w-10 sm:h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div><h3 class="text-xl sm:text-2xl font-black text-brand-green dark:text-brand-gold mb-2">يرجى اختيار اسم المخيم</h3><p class="text-gray-500 dark:text-gray-400 font-medium text-sm sm:text-base">قم باختيار المخيم من القائمة المنسدلة بالأعلى لعرض بيانات التخصيص والحدود المساحية والجغرافية له</p>';
+                }
+                
+                document.getElementById('campSearchInput').value = "";
+                document.getElementById('campSearchInput').placeholder = "اختر المخيم...";
+                const printCampTitle = document.getElementById('printCampTitle');
+                if(printCampTitle) printCampTitle.textContent = "";
+                
+            } else {
+                if(dataCont) dataCont.classList.add('hidden');
+                if(placeholder) {
+                    placeholder.classList.remove('hidden');
+                    placeholder.innerHTML = '<div class="w-16 h-16 sm:w-20 sm:h-20 bg-brand-goldLight dark:bg-brand-goldDark rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-brand-gold"><svg class="w-8 h-8 sm:w-10 sm:h-10 text-brand-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div><h3 class="text-xl sm:text-2xl font-black text-brand-green dark:text-brand-gold mb-2">لا توجد مخيمات مطابقة</h3><p class="text-gray-500 dark:text-gray-400 font-medium text-sm sm:text-base">تأكد من اختيار التبويبة الصحيحة أو الفلتر الصحيح</p>';
+                }
+                if(uiContainer) uiContainer.classList.add('hidden');
+            }
+        }
+
+        function toggleDropdown() { document.getElementById('dropdownList').classList.toggle('hidden'); document.getElementById('innerSearch').focus(); }
+        function filterCampsList() {
+            const term = document.getElementById('innerSearch').value.toLowerCase();
+            document.querySelectorAll('.camp-option').forEach(item => { item.style.display = item.textContent.toLowerCase().includes(term) ? 'flex' : 'none'; });
+        }
+
+        function renderOverviewDashboard() {
+            const grid = document.getElementById('overviewCardsGrid');
+            grid.innerHTML = '';
+            
+            let dataRow = summarySheetData || [];
+
+            if (isExternal) {
+                const extCards = [
+                    { title: "إجمالي مساحة المخيمات الكلية", val: dataRow[2] || 0, unit: "م²" },
+                    { title: "إجمالي مساحة الخيام (5*5)", val: dataRow[3] || 0, unit: "م²" },
+                    { title: "إجمالي عدد الحجاج المتوقع", val: dataRow[4] || 0, unit: "حاج" },
+                    { title: "إجمالي عدد الدول", val: dataRow[5] || 0, unit: "دولة" },
+                    { title: "إجمالي عدد الحجاج المخصص", val: dataRow[6] || 0, unit: "حاج" }
+                ];
+                extCards.forEach(c => grid.appendChild(createOverviewCard(c.title, c.val, c.unit)));
+                renderOverviewChart(["مستقلة", "تشاركية"], [dataRow[7] || 0, dataRow[8] || 0], dataRow[9] || 521);
+            } else {
+                const intCards = [
+                    { title: "إجمالي مساحة المخيمات الكلية", val: dataRow[2] || 0, unit: "م²" },
+                    { title: "المساحة المخصصة للإسكان", val: dataRow[3] || 0, unit: "م²" },
+                    { title: "إجمالي مساحة الخيام (5*5)", val: dataRow[4] || 0, unit: "م²" },
+                    { title: "إجمالي عدد الحجاج المتوقع", val: dataRow[5] || 0, unit: "حاج" },
+                    { title: "إجمالي عدد الشركات", val: dataRow[6] || 0, unit: "شركة" },
+                    { title: "إجمالي عدد الحجاج المخصص", val: dataRow[7] || 0, unit: "حاج" }
+                ];
+                intCards.forEach(c => grid.appendChild(createOverviewCard(c.title, c.val, c.unit)));
+                renderOverviewChart(["مستقلة", "تشاركية", "حكومية", "أبراج مستقلة", "أبراج تشاركية"], [dataRow[8] || 0, dataRow[9] || 0, dataRow[10] || 0, dataRow[11] || 0, dataRow[12] || 0], dataRow[13] || 125);
+            }
+        }
+
+        function createOverviewCard(title, value, unit) {
+            const card = document.createElement('div');
+            card.className = "glass-card bg-white dark:bg-brand-cardDark rounded-2xl flex flex-col overflow-hidden";
+            card.innerHTML = `
+                <div class="bg-brand-gold text-white py-3 px-2 text-center font-bold text-sm sm:text-base md:text-lg leading-snug">${title}</div>
+                <div class="p-4 sm:p-6 flex flex-col items-center justify-center flex-grow bg-brand-goldLight dark:bg-brand-goldDark/20">
+                    <div class="flex items-baseline justify-center gap-1.5 sm:gap-2 flex-wrap text-center">
+                        <span class="text-2xl sm:text-3xl md:text-4xl font-black text-brand-green dark:text-white break-all">${formatNumber(value)}</span>
+                        <span class="text-sm sm:text-base md:text-lg font-bold text-gray-500 dark:text-gray-400">${unit}</span>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function renderOverviewChart(labels, dataValues, totalCount) {
+            const ctx = document.getElementById('overviewCanvas').getContext('2d');
+            if (overviewChartInstance) overviewChartInstance.destroy();
+            const bgColors = ['#196d5a', '#c79a55', '#125243', '#d97706', '#0284c7'];
+            const isDark = document.documentElement.classList.contains('dark');
+            const formattedLabels = labels.map((lbl, idx) => { let pct = totalCount > 0 ? Math.round((dataValues[idx] / totalCount) * 100) : 0; return `${lbl} (${pct}%)`; });
+
+            overviewChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: formattedLabels, datasets: [{ data: dataValues, backgroundColor: bgColors.slice(0, dataValues.length), borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 13, weight: 'bold' }, color: isDark ? '#ffffff' : '#125243', usePointStyle: true, padding: 15 } }, tooltip: { rtl: true, titleFont: { family: 'Tajawal', size: 14 }, bodyFont: { family: 'Tajawal', size: 14, weight: 'bold' } } } },
+                plugins: [{ id: 'overviewCenterText', afterDraw: (chart) => { const width = chart.width, height = chart.height, cCtx = chart.ctx; cCtx.save(); cCtx.textAlign = 'center'; cCtx.textBaseline = 'middle'; cCtx.font = 'bold 15px Tajawal'; cCtx.fillStyle = '#9ca3af'; cCtx.fillText('إجمالي المخيمات', width / 2, (height / 2) - 18); cCtx.font = '900 32px Tajawal'; cCtx.fillStyle = isDark ? '#ffffff' : '#125243'; cCtx.fillText(formatNumber(totalCount), width / 2, (height / 2) + 15); cCtx.restore(); } }]
+            });
+        }
+
+        function selectCamp(campName) {
+            document.getElementById('campSearchInput').value = campName;
+            document.getElementById('dropdownList').classList.add('hidden');
+            
+            const userSession = JSON.parse(sessionStorage.getItem("userData") || '{}');
+            if (userSession.role === 'admin') document.getElementById('saveChangesBtn').classList.remove('hidden');
+            
+            document.getElementById('campSelectPlaceholder').classList.add('hidden');
+            document.getElementById('dataContainer').classList.remove('hidden');
+
+            currentCampData = dashboardData.find(d => d.campName === campName);
+            
+            const printCampTitle = document.getElementById('printCampTitle');
+            if (printCampTitle) printCampTitle.textContent = "اسم المخيم: " + currentCampData.campName;
+
+            document.getElementById("val-totalArea-input").value = currentCampData.totalArea;
+            document.getElementById("val-tentArea-input").value = currentCampData.tentArea;
+            document.getElementById("val-pilgrims-input").value = currentCampData.pilgrimsCount;
+            document.getElementById("val-allocated-input").value = currentCampData.allocatedPilgrims;
+            document.getElementById("val-companiesCount").textContent = formatNumber(currentCampData.companiesCount || (isExternal ? (currentCampData.countryNames.length || 1) : currentCampData.companies.length));
+
+            const titleCard2 = document.getElementById("title-card2");
+            const valHousingInputContainer = document.getElementById("val-housingArea-input-container");
+            const valHousingInput = document.getElementById("val-housingArea-input");
+            const valHousingText = document.getElementById("val-housingArea-text");
+            const unitHousingEl = document.getElementById("unit-housingArea");
+            
+            if (isExternal) {
+                titleCard2.textContent = currentCampData.isShared ? "الدول" : "الدولة";
+                let namesStr = (currentCampData.countryNames && currentCampData.countryNames.length > 0) ? currentCampData.countryNames.join(' / ') : "غير متوفر";
+                if(valHousingText) {
+                    valHousingText.textContent = namesStr;
+                    valHousingText.classList.remove('hidden');
+                }
+                if(valHousingInputContainer) valHousingInputContainer.classList.add('hidden');
+                if(unitHousingEl) unitHousingEl.style.display = 'none';
+            } else {
+                titleCard2.textContent = "المساحة المخصصة للإسكان";
+                if(valHousingText) valHousingText.classList.add('hidden');
+                if(valHousingInputContainer) valHousingInputContainer.classList.remove('hidden');
+                if(valHousingInput) valHousingInput.value = currentCampData.housingArea;
+                if(unitHousingEl) unitHousingEl.style.display = 'inline';
+            }
+
+            renderCompanyDisplaySlot();
+            updateChart();
+            renderMap(currentCampData.coordX, currentCampData.coordY, currentCampData.campName, currentCampData.kmlUrl);
+        }
+
+        function handleDataChange() {
+            if(!currentCampData) return;
+            currentCampData.totalArea = Math.round(parseFloat(document.getElementById("val-totalArea-input").value)) || 0;
+            if(!isExternal) currentCampData.housingArea = Math.round(parseFloat(document.getElementById("val-housingArea-input").value)) || 0;
+            currentCampData.tentArea = Math.round(parseFloat(document.getElementById("val-tentArea-input").value)) || 0;
+            currentCampData.pilgrimsCount = Math.round(parseInt(document.getElementById("val-pilgrims-input").value)) || 0;
+            currentCampData.allocatedPilgrims = Math.round(parseInt(document.getElementById("val-allocated-input").value)) || 0;
+            currentCampData.surplus = Math.max(0, currentCampData.pilgrimsCount - currentCampData.allocatedPilgrims);
+            
+            updateChart();
+            const user = JSON.parse(sessionStorage.getItem("userData") || '{}');
+            if (user.role === 'admin') document.getElementById('saveChangesBtn').classList.remove('hidden');
+        }
+
+        async function saveDataToFile() {
+            if (!currentCampData) return;
+            const userSession = JSON.parse(sessionStorage.getItem("userData") || '{}');
+            if (userSession.role !== 'admin') { showToast("عذراً، هذه الصلاحية للإدارة فقط.", "error"); return; }
+
+            showToast("جاري حفظ التعديلات في الشيت الأونلاين...", "success");
+            const payload = {
+                action: "updateCampData", sheetName: currentSheetName, isExternal: isExternal, rowNumber: currentCampData.rowNumber,
+                colIdxTotalArea: currentCampData.colIdxTotalArea, totalArea: currentCampData.totalArea,
+                colIdxHousingArea: currentCampData.colIdxHousingArea, housingArea: currentCampData.housingArea,
+                colIdxTentArea: currentCampData.colIdxTentArea, tentArea: currentCampData.tentArea,
+                colIdxPilgrims: currentCampData.colIdxPilgrims, pilgrimsCount: currentCampData.pilgrimsCount,
+                colIdxAllocated: currentCampData.colIdxAllocated, allocatedPilgrims: currentCampData.allocatedPilgrims,
+                colIdxSurplus: currentCampData.colIdxSurplus, surplus: currentCampData.surplus
+            };
+
+            try {
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if (result.success) { 
+                    showToast(result.message, "success"); 
+                    document.getElementById('saveChangesBtn').classList.add('hidden'); 
+                    // إطلاق إشعار بالتحديث
+                    if (typeof addNotification === 'function') addNotification(`تم تحديث بيانات المخيم: ${currentCampData.campName} بنجاح`);
+                }
+                else showToast("حدث خطأ أثناء الحفظ: " + result.message, "error");
+            } catch (error) { showToast("تعذر الاتصال بالخادم لحفظ البيانات.", "error"); }
+        }
+
+        function renderMap(lat, lng, campName, kmlUrl) {
+            document.getElementById('coordsText').textContent = campName;
+            const mapContainer = document.getElementById('mapContainer');
+            const fallbackContainer = document.getElementById('mapFallback');
+            const btnOpenMaps = document.getElementById('btnOpenGoogleMaps');
+
+            if (lat !== null && lng !== null) { btnOpenMaps.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`; btnOpenMaps.classList.remove('hidden'); } 
+            else btnOpenMaps.classList.add('hidden');
+
+            if (!kmlUrl && lat === null && lng === null) { mapContainer.style.display = 'none'; fallbackContainer.style.display = 'flex'; return; }
+
+            mapContainer.style.display = 'block'; fallbackContainer.style.display = 'none'; mapContainer.innerHTML = ''; 
+
+            if (kmlUrl && (kmlUrl.startsWith('http://') || kmlUrl.startsWith('https://'))) {
+                mapContainer.innerHTML = `<iframe src="${kmlUrl}" class="w-full h-full border-0" style="width: 100%; height: 100%; min-height: 300px;" loading="lazy" allowfullscreen></iframe>`;
+            } else if (kmlUrl) {
+                mapContainer.innerHTML = `<iframe src="map_viewer.html?file=${encodeURIComponent(kmlUrl)}" class="w-full h-full border-0" style="width: 100%; height: 100%; min-height: 300px;" loading="lazy" allowfullscreen></iframe>`;
+            } else if (lat !== null && lng !== null) {
+                mapContainer.innerHTML = `<iframe src="https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed" class="w-full h-full border-0" style="width: 100%; height: 100%; min-height: 300px;" loading="lazy" allowfullscreen></iframe>`;
+            } else { mapContainer.style.display = 'none'; fallbackContainer.style.display = 'flex'; }
+        }
+
+        function renderCompanyDisplaySlot() {
+            const slot = document.getElementById('companyDisplaySlot'); slot.innerHTML = '';
+            if (isExternal) {
+                let compName = currentCampData.companyName || "غير متوفر";
+                slot.innerHTML = `<div class="p-4 text-center flex flex-col justify-center items-center flex-grow gap-2 bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl shadow-sm"><div class="text-brand-gold font-bold text-xs">اسم الشركة</div><h3 class="text-lg sm:text-xl font-black text-brand-green dark:text-white leading-snug">${compName}</h3></div>`;
+            } else {
+                if (currentCampData.isShared) {
+                    currentCampData.companies.forEach((comp, idx) => {
+                        slot.innerHTML += `<div class="bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl p-2 flex flex-col items-center text-center shadow-sm flex-grow justify-center"><div class="text-brand-green dark:text-brand-gold font-bold text-xs leading-tight mb-0.5">${comp.name}</div><div class="text-brand-gold font-black text-base flex gap-1 items-baseline"><span>${formatNumber(comp.pilgrims)}</span> <span class="text-[10px]">حاج</span></div></div>`;
+                    });
+                } else {
+                    let comp = currentCampData.companies[0] || { name: "غير متوفر", pilgrims: currentCampData.allocatedPilgrims };
+                    slot.innerHTML = `<div class="p-4 text-center flex flex-col justify-center items-center flex-grow gap-3 bg-white dark:bg-slate-800 border-2 border-brand-gold rounded-xl shadow-sm"><h3 class="text-base sm:text-lg font-black text-brand-green dark:text-white leading-snug">${comp.name}</h3><div class="border-2 border-brand-gold text-brand-gold px-3 py-1 rounded-xl font-black text-base sm:text-lg bg-brand-goldLight dark:bg-slate-700 flex gap-1 items-baseline"><span>${formatNumber(comp.pilgrims)}</span> <span class="text-xs">حاج</span></div></div>`;
+                }
+            }
+        }
+
+        const centerTextPlugin = {
+            id: 'centerText',
+            afterDraw: (chart) => {
+                if (chart.config.options.elements && chart.config.options.elements.center) {
+                    const ctx = chart.ctx; const centerConfig = chart.config.options.elements.center; const meta = chart.getDatasetMeta(0);
+                    if (meta.data && meta.data.length > 0) {
+                        const centerX = meta.data[0].x; const centerY = meta.data[0].y; const isDark = document.documentElement.classList.contains('dark') && !document.getElementById('printableDashboard').classList.contains('exporting-mode');
+                        ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = 'bold 14px Tajawal'; ctx.fillStyle = '#9ca3af'; ctx.fillText(isExternal ? 'نسبة التسكين' : 'الإجمالي', centerX, centerY - 20); ctx.font = '900 28px Tajawal'; ctx.fillStyle = isDark ? '#ffffff' : '#125243'; ctx.fillText(centerConfig.text, centerX, centerY + 15); ctx.restore();
+                    }
+                }
+            }
+        };
+        Chart.register(centerTextPlugin);
+
+        function updateChart(isExport = false) {
+            const ctx = document.getElementById('doughnutCanvas').getContext('2d');
+            if(doughnutChartInstance) doughnutChartInstance.destroy();
+
+            let labels = []; let dataValues = []; let bgColors = ['#c79a55', '#125243', '#196d5a', '#d97706', '#0284c7'];
+            const isDark = document.documentElement.classList.contains('dark') && !isExport && !document.getElementById('printableDashboard').classList.contains('exporting-mode');
+
+            if (isExternal) {
+                let rateVal = (currentCampData.allocatedPilgrims > 0) ? (currentCampData.tentArea / currentCampData.allocatedPilgrims) : 0;
+                let dispText = rateVal.toFixed(2); labels = [`نسبة التسكين (${dispText})`]; dataValues = [rateVal];
+                doughnutChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: dataValues, backgroundColor: ['#c79a55'], borderWidth: 0, hoverOffset: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', animation: isExport ? false : { duration: 600 }, elements: { center: { text: dispText } }, layout: { padding: { bottom: 15 } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 12, weight: 'bold' }, color: isDark ? '#ffffff' : '#125243', usePointStyle: true, padding: 15 } }, tooltip: { rtl: true, titleFont: { family: 'Tajawal', size: 14 }, bodyFont: { family: 'Tajawal', size: 14, weight: 'bold' }, displayColors: false } } } });
+            } else {
+                let total = currentCampData.pilgrimsCount;
+                if (currentCampData.isShared && currentCampData.companies.length > 0) {
+                    currentCampData.companies.forEach((comp) => { let pct = total > 0 ? Math.round((comp.pilgrims / total) * 100) : 0; labels.push(`${comp.name} (${pct}%)`); dataValues.push(comp.pilgrims); });
+                } else {
+                    let allocated = currentCampData.allocatedPilgrims; let allocatedPct = total > 0 ? Math.round((allocated / total) * 100) : 0; labels.push(`المخصص (${allocatedPct}%)`); dataValues.push(allocated);
+                }
+                let surplus = currentCampData.surplus; let surplusPct = total > 0 ? Math.round((surplus / total) * 100) : 0; labels.push(`الفائض (${surplusPct}%)`); dataValues.push(surplus);
+
+                doughnutChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: dataValues, backgroundColor: bgColors.slice(0, dataValues.length), borderWidth: 0, hoverOffset: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', animation: isExport ? false : { duration: 600 }, elements: { center: { text: formatNumber(total) } }, layout: { padding: { bottom: 15 } }, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 12, weight: 'bold' }, color: isDark ? '#ffffff' : '#125243', usePointStyle: true, padding: 15 } }, tooltip: { rtl: true, titleFont: { family: 'Tajawal', size: 14 }, bodyFont: { family: 'Tajawal', size: 14, weight: 'bold' }, displayColors: false } } } });
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if(type === 'success' || type === 'error') { container.innerHTML = ''; }
+            const toast = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-red-500' : 'bg-brand-green';
+            toast.className = `flex items-center p-4 w-full text-white ${bgColor} rounded-xl shadow-2xl transition-all z-[999]`;
+            toast.innerHTML = `<div class="font-bold flex-grow text-center text-sm sm:text-base">${message}</div>`;
+            container.appendChild(toast);
+            if(!message.includes("جاري")) setTimeout(() => { if(toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        function formatNumber(num) { return Math.round(Number(num)).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+        function toggleDarkMode() { document.documentElement.classList.toggle('dark'); if(doughnutChartInstance && currentCampData) updateChart(); if(overviewChartInstance) renderOverviewDashboard(); renderSelectionCharts(); }
+        
+        async function handleFileSelection() {
+            if (window.showOpenFilePicker) {
+                try {
+                    const [handle] = await window.showOpenFilePicker({ types: [{ description: 'Excel Files', accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }], multiple: false });
+                    fileHandle = handle; const file = await handle.getFile(); processFile(file);
+                } catch (err) { if (err.name !== 'AbortError') document.getElementById('fallbackFileInput').click(); }
+            } else document.getElementById('fallbackFileInput').click();
+        }
+        function handleFallbackUpload(event) { fileHandle = null; const file = event.target.files[0]; if(file) processFile(file); }
+        async function processFile(file) {
+            updateTitleByFileName(file.name); showToast("جاري قراءة البيانات...", "success");
+            try {
+                const arrayBuffer = await file.arrayBuffer(); globalWorkbook = new ExcelJS.Workbook(); await globalWorkbook.xlsx.load(arrayBuffer); parseExcelWorkbook();
+            } catch (error) { showToast("حدث خطأ أثناء قراءة الملف.", "error"); }
+        }
+        
+        function getCellSafe(row, idx) { if (!idx || idx < 1) return null; try { let val = row.getCell(idx)?.value; if (val && typeof val === 'object' && val.result !== undefined) val = val.result; return val; } catch (e) { return null; } }
+        function parseExcelWorkbook() { /* ... دالة الرفع المحلي ... */ }
+        async function exportPPTX() { alert("جاري العمل عليها"); }
+    </script>
+</body>
+</html>
