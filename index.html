@@ -878,38 +878,34 @@
         }
 
         async function handleLogin(e) {
-            e.preventDefault();
-            const u = document.getElementById('usernameInput').value.trim();
-            const p = document.getElementById('passwordInput').value.trim();
-            
-            showToast("جاري التحقق من الحساب...", "success");
+    e.preventDefault();
+    const u = document.getElementById('usernameInput').value.trim();
+    const p = document.getElementById('passwordInput').value.trim();
+    
+    showToast("جاري التحقق من الحساب...", "success");
 
-            if (SCRIPT_URL.includes("XXXXX")) {
-                if (u === "admin" && p === "12345") {
-                    sessionStorage.setItem("isLoggedIn", "true");
-                    sessionStorage.setItem("userData", JSON.stringify({ role: 'admin', sector: 'الكل' }));
-                    showToast("تم تسجيل الدخول بنجاح!", "success");
-                    showSelectionScreen(false);
-                    return;
-                }
-            }
+    try {
+        const { data, error } = await supabaseClient
+            .from('app_users')
+            .select('*')
+            .eq('username', u)
+            .eq('password', p)
+            .single();
 
-            try {
-                const res = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`);
-                const json = await res.json();
-                
-                if (json.success) {
-                    sessionStorage.setItem("isLoggedIn", "true");
-                    sessionStorage.setItem("userData", JSON.stringify(json.user));
-                    showToast(json.message || "تم تسجيل الدخول بنجاح!", "success");
-                    showSelectionScreen(false);
-                } else {
-                    showToast(json.message || "بيانات الدخول غير صحيحة", "error");
-                }
-            } catch (err) {
-                showToast("تعذر الاتصال بالخادم. برجاء المحاولة لاحقاً", "error");
-            }
+        if (data) {
+            sessionStorage.setItem("isLoggedIn", "true");
+            // تهيئة البيانات للمنصة
+            const userData = { username: data.username, role: data.role, sector: data.sector, refName: data.ref_name };
+            sessionStorage.setItem("userData", JSON.stringify(userData));
+            showToast("تم تسجيل الدخول بنجاح!", "success");
+            showSelectionScreen(false);
+        } else {
+            showToast("بيانات الدخول غير صحيحة", "error");
         }
+    } catch (err) {
+        showToast("تعذر الاتصال بقاعدة البيانات", "error");
+    }
+}
 
         function applyUserPermissions() {
             const user = JSON.parse(sessionStorage.getItem("userData") || '{}');
@@ -1064,15 +1060,25 @@
             });
         }
 
-        async function openAdminModal() {
-            document.getElementById('adminModal').classList.remove('hidden');
-            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" class="text-center p-4">جاري التحميل...</td></tr>';
-            try {
-                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "manageUsers", operation: "get" }) });
-                const result = await response.json();
-                if(result.success) { adminUsersCache = result.data; renderUsersTable(); }
-            } catch(e) {}
+      async function openAdminModal() {
+    document.getElementById('adminModal').classList.remove('hidden');
+    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="5" class="text-center p-4">جاري التحميل...</td></tr>';
+    try {
+        const { data, error } = await supabaseClient.from('app_users').select('*');
+        if (data) {
+            adminUsersCache = data.map(u => ({
+                rowNumber: u.id, // بنستخدم الـ id بتاع سوبابيز بدل رقم الصف
+                username: u.username,
+                password: u.password,
+                role: u.role,
+                sector: u.sector,
+                refName: u.ref_name
+            }));
+            renderUsersTable();
         }
+    } catch(e) {}
+}
+        
         function closeAdminModal() { document.getElementById('adminModal').classList.add('hidden'); resetUserForm(); }
         function renderUsersTable() {
             const tbody = document.getElementById('usersTableBody'); tbody.innerHTML = '';
@@ -1088,24 +1094,38 @@
             document.getElementById('userFormTitle').textContent = "إضافة مستخدم جديد"; document.getElementById('editRowNumber').value = ""; document.getElementById('addUsername').value = ""; document.getElementById('addPassword').value = ""; document.getElementById('addRole').value = "user"; document.getElementById('addSector').value = "الكل"; document.getElementById('addRefName').value = "";
         }
         async function saveUser() {
-            const rowNumber = document.getElementById('editRowNumber').value;
-            const userData = { rowNumber: rowNumber || null, username: document.getElementById('addUsername').value.trim(), password: document.getElementById('addPassword').value.trim(), role: document.getElementById('addRole').value, sector: document.getElementById('addSector').value, refName: document.getElementById('addRefName').value.trim() };
-            if(!userData.username || !userData.password) { showToast("يرجى إكمال البيانات", "error"); return; }
-            showToast("جاري الحفظ...", "success");
-            try {
-                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "manageUsers", operation: rowNumber ? 'edit' : 'add', userData: userData }) });
-                const result = await res.json();
-                if(result.success) { showToast(result.message, "success"); openAdminModal(); resetUserForm(); }
-            } catch(e) {}
+    const rowId = document.getElementById('editRowNumber').value;
+    const userData = {
+        username: document.getElementById('addUsername').value.trim(),
+        password: document.getElementById('addPassword').value.trim(),
+        role: document.getElementById('addRole').value,
+        sector: document.getElementById('addSector').value,
+        ref_name: document.getElementById('addRefName').value.trim()
+    };
+    if(!userData.username || !userData.password) { showToast("يرجى إكمال البيانات", "error"); return; }
+    showToast("جاري الحفظ...", "success");
+    try {
+        if (rowId) {
+            // تعديل
+            const { error } = await supabaseClient.from('app_users').update(userData).eq('id', rowId);
+            if(!error) { showToast("تم التعديل بنجاح", "success"); openAdminModal(); resetUserForm(); } else showToast("فشل التعديل", "error");
+        } else {
+            // إضافة جديدة
+            const { error } = await supabaseClient.from('app_users').insert([userData]);
+            if(!error) { showToast("تمت الإضافة بنجاح", "success"); openAdminModal(); resetUserForm(); } else showToast("فشل الإضافة", "error");
         }
-        async function deleteUser(rowNumber) {
-            if(!confirm("هل أنت متأكد من حذف المستخدم؟")) return;
-            try {
-                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "manageUsers", operation: 'delete', userData: { rowNumber: rowNumber } }) });
-                const result = await res.json();
-                if(result.success) { showToast(result.message, "success"); openAdminModal(); }
-            } catch(e) {}
-        }
+    } catch(e) {}
+}
+        
+    async function deleteUser(rowId) {
+    if(!confirm("هل أنت متأكد من حذف المستخدم نهائياً؟")) return;
+    showToast("جاري الحذف...", "success");
+    try {
+        const { error } = await supabaseClient.from('app_users').delete().eq('id', rowId);
+        if(!error) { showToast("تم الحذف بنجاح", "success"); openAdminModal(); }
+        else showToast("فشل الحذف", "error");
+    } catch(e) {}
+}
 
         async function loadGoogleSheet(type) {
             const action = type === 'internal' ? 'getInternal' : 'getExternal';
